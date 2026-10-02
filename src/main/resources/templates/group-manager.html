@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Manage Group</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .card { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; border-radius: 5px; }
+        .message { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        button { padding: 10px 15px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 3px; margin-top: 5px;}
+        button:hover { background: #0056b3; }
+        input[type="text"] { margin-bottom: 10px; padding: 5px; width: 300px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px;}
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <h1>Manage Group <span th:text="${groupId}"></span></h1>
+    <a href="/">Back to Dashboard</a>
+    
+    <div th:if="${message}" class="message" th:text="${message}" style="margin-top: 10px;"></div>
+    <div th:if="${error}" class="error" th:text="${error}" style="margin-top: 10px;"></div>
+
+    <div class="card">
+        <h2>Step 1: Update Google Form</h2>
+        <form method="POST" th:action="@{/group/update-form}">
+            <input type="hidden" name="id" th:value="${groupId}" />
+            <input type="text" name="formId" placeholder="Google Form ID" required /><br/>
+            <button type="submit">Update Google Form (Mock)</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Step 2: Send Preference Collection Emails</h2>
+        <form method="POST" th:action="@{/group/send-preference-emails}">
+            <input type="hidden" name="id" th:value="${groupId}" />
+            <input type="text" name="term" placeholder="Term (e.g. Jul-Nov 2026)" required /><br/>
+            <input type="text" name="deadline" placeholder="Deadline (e.g. 5pm on Tuesday Aug 4)" required /><br/>
+            <input type="text" name="formLink" placeholder="Google Form Link" required /><br/>
+            <button type="submit">Send Emails</button>
+        </form>
+        <p><small>Note: Requires valid SMTP configuration in application.properties</small></p>
+    </div>
+
+    <div class="card">
+        <h2>Step 3: Run TA Allocation</h2>
+        <p>Make sure you have uploaded the latest Form Preferences CSV before running this!</p>
+        <form method="POST" th:action="@{/group/allocate}">
+            <input type="hidden" name="id" th:value="${groupId}" />
+            <button type="submit" style="background-color: #28a745;">Run Allocation Algorithm</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Step 4: Send Confirmation Emails</h2>
+        <form method="POST" th:action="@{/group/send-confirmation-emails}">
+            <input type="hidden" name="id" th:value="${groupId}" />
+            <input type="text" name="term" placeholder="Term (e.g. Jul-Nov 2026)" required /><br/>
+            <button type="submit">Send Confirmations</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Courses in Group <span th:text="${groupId}"></span></h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Course No</th>
+                    <th>Course Name</th>
+                    <th>Instructor</th>
+                    <th>TA 1</th>
+                    <th>TA 2</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="course : ${courses}">
+                    <td th:text="${course.courseNo}"></td>
+                    <td th:text="${course.courseName}"></td>
+                    <td th:text="${course.instructorName}"></td>
+                    <td th:text="${course.ta1}"></td>
+                    <td th:text="${course.ta2}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

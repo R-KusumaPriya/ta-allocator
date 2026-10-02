@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>TA Allocator Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .card { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; border-radius: 5px; }
+        .message { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        button { padding: 10px 15px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 3px;}
+        button:hover { background: #0056b3; }
+        input[type="file"] { margin-bottom: 10px; }
+        h1, h2, h3 { color: #333; }
+    </style>
+</head>
+<body>
+
+    <h1>TA Allocator Dashboard</h1>
+
+    <div th:if="${message}" class="message" th:text="${message}"></div>
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+
+    <div class="card">
+        <h2>Data Overview</h2>
+        <p>Total Courses: <span th:text="${courseCount}"></span></p>
+        <p>Total Students: <span th:text="${studentCount}"></span> (Available: <span th:text="${availableStudentCount}"></span>)</p>
+    </div>
+
+    <div class="card">
+        <h2>Upload Data (CSV)</h2>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div>
+                <h3>Courses</h3>
+                <form method="POST" th:action="@{/upload/courses}" enctype="multipart/form-data">
+                    <input type="file" name="file" accept=".csv" required /><br/>
+                    <button type="submit">Upload Courses</button>
+                </form>
+            </div>
+            <div>
+                <h3>Students</h3>
+                <form method="POST" th:action="@{/upload/students}" enctype="multipart/form-data">
+                    <input type="file" name="file" accept=".csv" required /><br/>
+                    <button type="submit">Upload Students</button>
+                </form>
+            </div>
+            <div>
+                <h3>Faculty</h3>
+                <form method="POST" th:action="@{/upload/faculty}" enctype="multipart/form-data">
+                    <input type="file" name="file" accept=".csv" required /><br/>
+                    <button type="submit">Upload Faculty</button>
+                </form>
+            </div>
+            <div>
+                <h3>Form Preferences</h3>
+                <form method="POST" th:action="@{/upload/preferences}" enctype="multipart/form-data">
+                    <input type="file" name="file" accept=".csv" required /><br/>
+                    <button type="submit">Upload Preferences</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" th:if="${not #lists.isEmpty(groupIds)}">
+        <h2>Manage Groups</h2>
+        <p>Select a group to run allocations and send emails.</p>
+        <ul>
+            <li th:each="id : ${groupIds}">
+                <a th:href="@{/group(id=${id})}" th:text="'Manage Group ' + ${id}"></a>
+            </li>
+        </ul>
+    </div>
+
+</body>
+</html>
