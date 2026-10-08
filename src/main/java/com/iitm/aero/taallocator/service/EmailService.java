@@ -29,14 +29,23 @@ public class EmailService {
     @Autowired
     private StudentRepository studentRepository;
 
-    public void sendPreferenceEmails(double groupId, String termString, String deadline, String formLink) {
+    public String sendPreferenceEmails(double groupId, String termString, String deadline, String formLink) {
         List<Course> courses = courseRepository.findByGroupId(groupId);
+        if (courses.isEmpty()) {
+            return "No courses found for Group ID: " + groupId;
+        }
+        
+        int sentCount = 0;
+        List<String> logs = new java.util.ArrayList<>();
         
         for (Course course : courses) {
-            Faculty faculty = facultyRepository.findByNameIgnoreCase(course.getInstructorName());
-            if (faculty == null || faculty.getEmail() == null) continue;
+            String email = resolveFacultyEmail(course);
+            if (email == null || email.trim().isEmpty()) {
+                logs.add("Skipped " + course.getCourseNo() + ": Faculty '" + course.getInstructorName() + "' has no email in database.");
+                continue;
+            }
             
-            String fname = toCapitalCase(faculty.getName());
+            String fname = toCapitalCase(course.getInstructorName() != null ? course.getInstructorName() : "Colleague");
             String sub = termString + " TA Allotment Group " + groupId + " - " + course.getCourseNo();
             
             String msg = "Dear Prof. " + fname + ",\n\n" +
@@ -49,36 +58,47 @@ public class EmailService {
                     "Best,\nNidish Narayanaa Balaji\nAssistant Professor,\n" +
                     "Department of Aerospace Engineering,\nIIT Madras, Chennai 600036, IN";
             
-            sendEmail(faculty.getEmail(), sub, msg, null);
+            String err = sendEmail(email, sub, msg, null);
+            if (err == null) {
+                sentCount++;
+                logs.add("Sent to " + email + " (" + course.getCourseNo() + ")");
+            } else {
+                logs.add("FAILED for " + email + ": " + err);
+            }
         }
+        return "Preference Emails: " + sentCount + "/" + courses.size() + " sent. Details: " + String.join(" | ", logs);
     }
 
-    public void sendConfirmationEmails(double groupId, String termString) {
+    public String sendConfirmationEmails(double groupId, String termString) {
         List<Course> courses = courseRepository.findByGroupId(groupId);
+        if (courses.isEmpty()) {
+            return "No courses found for Group ID: " + groupId;
+        }
+        
+        int sentCount = 0;
+        List<String> logs = new java.util.ArrayList<>();
         
         for (Course course : courses) {
-            Faculty faculty = facultyRepository.findByNameIgnoreCase(course.getInstructorName());
-            if (faculty == null || faculty.getEmail() == null) continue;
+            String email = resolveFacultyEmail(course);
+            if (email == null || email.trim().isEmpty()) {
+                logs.add("Skipped " + course.getCourseNo() + ": Faculty '" + course.getInstructorName() + "' not found in faculty table.");
+                continue;
+            }
             
-            String ta1Email = getEmailForRollNo(course.getTa1());
-            String ta2Email = getEmailForRollNo(course.getTa2());
-            
-            String ccs = "";
             StringBuilder tasList = new StringBuilder();
-            
-            if (ta1Email != null) {
-                ccs += ta1Email;
+            if (course.getTa1() != null && !course.getTa1().trim().isEmpty() && !course.getTa1().equalsIgnoreCase("xxxx")) {
                 tasList.append("+ ").append(course.getTa1()).append(": ").append(getStudentName(course.getTa1())).append("\n");
             }
-            if (ta2Email != null) {
-                if (!ccs.isEmpty()) ccs += ",";
-                ccs += ta2Email;
+            if (course.getTa2() != null && !course.getTa2().trim().isEmpty() && !course.getTa2().equalsIgnoreCase("xxxx")) {
                 tasList.append("+ ").append(course.getTa2()).append(": ").append(getStudentName(course.getTa2())).append("\n");
             }
             
-            if (tasList.length() == 0) continue; // No TAs assigned
+            if (tasList.length() == 0) {
+                logs.add("Skipped " + course.getCourseNo() + ": No TAs assigned yet. (Did you click 'Run Allocation Algorithm' first?)");
+                continue;
+            }
             
-            String fname = toCapitalCase(faculty.getName());
+            String fname = toCapitalCase(course.getInstructorName() != null ? course.getInstructorName() : "Colleague");
             String sub = course.getCourseNo() + " " + termString + " TA Allotment Confirmation";
             
             String msg = "Dear Prof. " + fname + ",\n\n" +
@@ -93,11 +113,52 @@ public class EmailService {
                     "Best,\nNidish Narayanaa Balaji\nAssistant Professor,\n" +
                     "Department of Aerospace Engineering,\nIIT Madras, Chennai 600036, IN";
             
-            sendEmail(faculty.getEmail(), sub, msg, ccs.isEmpty() ? null : ccs.split(","));
+            // CC emails disabled during testing to prevent emailing student roll numbers
+            String err = sendEmail(email, sub, msg, null);
+            if (err == null) {
+                sentCount++;
+                logs.add("Sent to " + email + " (" + course.getCourseNo() + ")");
+            } else {
+                logs.add("FAILED for " + email + ": " + err);
+            }
         }
+        return "Confirmation Emails: " + sentCount + " sent. Details: " + String.join(" | ", logs);
+    }
+
+    private String resolveFacultyEmail(Course course) {
+        if (course == null) return null;
+        
+        // 1. Try finding in faculty table by exact name
+        if (course.getInstructorName() != null && !course.getInstructorName().trim().isEmpty()) {
+            Faculty faculty = facultyRepository.findByNameIgnoreCase(course.getInstructorName().trim());
+            if (faculty != null && faculty.getEmail() != null && !faculty.getEmail().trim().isEmpty()) {
+                return faculty.getEmail().trim();
+            }
+            
+            // 2. Try normalized whitespace matching in faculty table
+            String normalizedCourseInstructor = course.getInstructorName().trim().replaceAll("\\s+", " ").toLowerCase();
+            List<Faculty> allFaculty = facultyRepository.findAll();
+            for (Faculty f : allFaculty) {
+                if (f.getName() != null) {
+                    String normalizedFacName = f.getName().trim().replaceAll("\\s+", " ").toLowerCase();
+                    if (normalizedFacName.equals(normalizedCourseInstructor)) {
+                        if (f.getEmail() != null && !f.getEmail().trim().isEmpty()) {
+                            return f.getEmail().trim();
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 3. Fallback to direct facultyEmail on course entity if present
+        if (course.getFacultyEmail() != null && !course.getFacultyEmail().trim().isEmpty()) {
+            return course.getFacultyEmail().trim();
+        }
+        
+        return null;
     }
     
-    private void sendEmail(String to, String subject, String text, String[] cc) {
+    private String sendEmail(String to, String subject, String text, String[] cc) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(to);
@@ -107,9 +168,11 @@ public class EmailService {
                 message.setCc(cc);
             }
             mailSender.send(message);
-            System.out.println("Email sent to: " + to);
+            System.out.println("Email successfully sent to: " + to);
+            return null; // success
         } catch (Exception e) {
             System.err.println("Failed to send email to " + to + ": " + e.getMessage());
+            return e.getMessage();
         }
     }
     

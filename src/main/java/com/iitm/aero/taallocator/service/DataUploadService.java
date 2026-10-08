@@ -35,12 +35,13 @@ public class DataUploadService {
             if (records.size() <= 1) return;
             
             String[] headers = records.get(0);
-            int idIdx = -1, nameIdx = -1, facultyIdx = -1, priorityIdx = -1, groupIdx = -1;
+            int idIdx = -1, nameIdx = -1, facultyIdx = -1, facultyEmailIdx = -1, priorityIdx = -1, groupIdx = -1;
             for (int j = 0; j < headers.length; j++) {
                 String h = headers[j].trim().toLowerCase();
                 if (h.equals("id") || h.equals("courseno") || h.equals("course no")) idIdx = j;
                 else if (h.equals("name") || h.equals("coursename") || h.equals("course name")) nameIdx = j;
-                else if (h.contains("faculty_name") || h.equals("instructorname") || h.equals("instructor name")) facultyIdx = j;
+                else if (h.contains("faculty_email") || h.contains("instructor_email") || h.equals("email")) facultyEmailIdx = j;
+                else if (h.contains("faculty_name") || h.equals("instructorname") || h.equals("instructor name") || h.equals("faculty") || h.equals("instructor")) facultyIdx = j;
                 else if (h.equals("priority")) priorityIdx = j;
                 else if (h.equals("group_id") || h.equals("groupid") || h.equals("group id")) groupIdx = j;
             }
@@ -60,6 +61,9 @@ public class DataUploadService {
                 course.setCourseNo(record[idIdx].trim());
                 if (record.length > nameIdx) course.setCourseName(record[nameIdx].trim());
                 if (record.length > facultyIdx) course.setInstructorName(record[facultyIdx].trim());
+                if (facultyEmailIdx != -1 && record.length > facultyEmailIdx && !record[facultyEmailIdx].trim().isEmpty()) {
+                    course.setFacultyEmail(record[facultyEmailIdx].trim());
+                }
                 
                 if (record.length > priorityIdx) {
                     try { course.setPriority(Integer.parseInt(record[priorityIdx].trim())); } 

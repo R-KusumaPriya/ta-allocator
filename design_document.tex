@@ -1,0 +1,146 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{tocloft}
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+\title{\textbf{TA Allocator - System Architecture and Design Document}}
+\author{Department of Aerospace Engineering \\ Indian Institute of Technology Madras}
+\date{Academic Year 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Project Overview}
+The \textbf{TA Allocator} is a web-based administrative application designed to automate the Teaching Assistant (TA) allocation and faculty coordination workflow for the Department of Aerospace Engineering at IIT Madras. 
+
+Historically, TA allocations were handled via fragmented Google Sheets and manual email correspondence. The TA Allocator automates this operational lifecycle by providing:
+\begin{enumerate}[noitemsep]
+    \item Multi-format CSV data ingestion for Courses, Students, Faculty, and Form Preferences.
+    \item Bidirectional integration with the \textbf{Google Forms API (v1)} to dynamically populate live dropdown questions with eligible courses and currently unassigned students.
+    \item Automated email dispatch via \textbf{Gmail SMTP (JavaMailSender)} for professor preference requests and official TA allotment confirmations.
+    \item A constraint-satisfaction allocation algorithm that respects faculty choices, course priorities, availability locks, and course quotas.
+\end{enumerate}
+
+\section{System Architecture}
+The application adopts an enterprise \textbf{Model-View-Controller (MVC)} pattern implemented using Java 17 and the Spring Boot framework.
+
+\begin{itemize}
+    \item \textbf{Presentation Layer (View):} Server-side rendered HTML using \textbf{Thymeleaf}. The presentation layer provides a master Admin Dashboard (\texttt{dashboard.html}) for file uploads and global metric tracking, along with a per-bucket management interface (\texttt{group-manager.html}).
+    \item \textbf{Web/Controller Layer:} Handled by \texttt{AdminController.java}, which maps HTTP GET and POST requests, coordinates file streaming via \texttt{MultipartFile}, and manages view redirection with user flash messages.
+    \item \textbf{Business Service Layer:} Modular Spring services (\texttt{DataUploadService}, \texttt{AllocationService}, \texttt{EmailService}, and \texttt{GoogleFormsService}) encapsulating data processing, third-party API communication, and allocation algorithms.
+    \item \textbf{Persistence Layer (Model/Data):} Built on \textbf{Spring Data JPA} and \textbf{Hibernate} backed by an in-memory \textbf{H2 Database} (\texttt{jdbc:h2:mem:tadb}). State is maintained during runtime with low query latency and zero external database installation overhead.
+\end{itemize}
+
+\subsection{External Integrations}
+\begin{itemize}
+    \item \textbf{Google Forms API (v1):} Communicates with Google Cloud endpoints via OAuth 2.0 Service Account credentials (\texttt{credentials.json}). Updates form items in a single atomic \texttt{BatchUpdateFormRequest}.
+    \item \textbf{Google SMTP Relay:} Dispatches automated notifications via \texttt{smtp.gmail.com} on port 587 using TLS/STARTTLS encryption and dedicated 16-character Google App Passwords.
+\end{itemize}
+
+\section{Module and Class Specifications}
+
+\subsection{Data Models (\texttt{com.iitm.aero.taallocator.model})}
+\begin{itemize}
+    \item \textbf{\texttt{Course}}: Encapsulates course ID (\texttt{courseNo}), course title, assigned faculty name, faculty email, priority score, allocation group ID (\texttt{groupId}), and allotted assistants (\texttt{ta1}, \texttt{ta2}).
+    \item \textbf{\texttt{Student}}: Captures roll number (\texttt{rollNo}), student name, CGPA, degree program (B.Tech, M.Tech, Ph.D.), current assigned course, and runtime availability boolean (\texttt{isAvailable}).
+    \item \textbf{\texttt{Faculty}}: Stores instructor directory records, mapping names to institutional email addresses and internal department codes.
+    \item \textbf{\texttt{PreferenceResponse}}: Represents ingested Google Form responses, storing the submitted course, instructor name, and ordered student choices (\texttt{taPreference1} through \texttt{taPreference4}).
+\end{itemize}
+
+\subsection{Repository Layer (\texttt{com.iitm.aero.taallocator.repository})}
+Leverages Spring Data JPA interfaces that automatically generate runtime SQL queries:
+\begin{itemize}
+    \item \texttt{CourseRepository}: Provides \texttt{findByGroupId(double groupId)} for scoped allocation rounds.
+    \item \texttt{StudentRepository}: Provides \texttt{findByIsAvailableTrue()} to query only unallocated candidates.
+    \item \texttt{FacultyRepository}: Provides \texttt{findByNameIgnoreCase(String name)} for resilient faculty directory lookups.
+    \item \texttt{PreferenceRepository}: Stores and queries raw form submission records.
+\end{itemize}
+
+\subsection{Service Layer (\texttt{com.iitm.aero.taallocator.service})}
+
+\subsubsection{\texttt{DataUploadService}}
+Parses uploaded CSV files utilizing \texttt{OpenCSV (v5.9)}. Implements dynamic header normalization to insulate the application against varying column naming conventions across different department spreadsheets:
+\begin{itemize}[noitemsep]
+    \item Resolves course columns matching \texttt{id}, \texttt{courseno}, \texttt{name}, \texttt{faculty\_name}, \texttt{priority}, \texttt{group\_id}.
+    \item Resolves student columns matching \texttt{id}, \texttt{roll}, \texttt{name}, \texttt{cgpa}, \texttt{program}, \texttt{available}.
+    \item Sets initial student availability flags based on prior course assignments.
+\end{itemize}
+
+\subsubsection{\texttt{AllocationService}}
+Executes the allocation algorithm for a target \texttt{groupId}:
+\begin{enumerate}[noitemsep]
+    \item Retrieves all courses associated with the target group.
+    \item Fetches faculty preference responses matching the course code.
+    \item Evaluates special conditions, such as faculty opting out with \textit{"I do not want TAs"}.
+    \item Iterates sequentially through faculty choices (\texttt{Preference 1} to \texttt{Preference 4}).
+    \item Extracts student roll numbers using normalized parsing (\texttt{RollNo: Name}).
+    \item Validates student existence and active availability (\texttt{student.isAvailable() == true}).
+    \item Assigns the student as \texttt{ta1} or \texttt{ta2}, sets \texttt{isAvailable = false}, and persists state updates to the database.
+    \item Enforces a strict maximum ceiling of 2 TAs per course.
+\end{enumerate}
+
+\subsubsection{\texttt{GoogleFormsService}}
+Automates synchronization with Google Forms:
+\begin{enumerate}[noitemsep]
+    \item Authenticates using \texttt{GoogleCredentials} loaded from \texttt{credentials.json} with the \texttt{FORMS\_BODY} scope.
+    \item Retrieves the target form schema via \texttt{forms.get(formId)}.
+    \item Formats all unassigned students into descriptive dropdown items (\texttt{RollNo: Name [CGPA] (Program)}), prepending standard options (\textit{"No preference"}, \textit{"I do not want TAs"}).
+    \item Identifies target questions by matching titles (\texttt{Select Course} and \texttt{TA Preference}).
+    \item Executes a \texttt{BatchUpdateFormRequest} to rewrite dropdown options directly on Google's cloud servers.
+\end{enumerate}
+
+\subsubsection{\texttt{EmailService}}
+Manages transactional SMTP email delivery via Spring's \texttt{JavaMailSender}:
+\begin{itemize}[noitemsep]
+    \item \textbf{Preference Collection Phase}: Formats tailored emails to professors containing course titles, submission deadlines, and direct Google Form links.
+    \item \textbf{Confirmation Phase}: Formats final allotment notifications detailing assigned TAs and prompting faculty-student kickoff meetings.
+    \item \textbf{Email Resolution Fallback}: Resolves instructor emails via three-tier lookup: exact directory match, normalized whitespace match, or embedded course record email.
+\end{itemize}
+
+\section{Operational Workflow and Group Segmentation}
+Courses are segmented by \textbf{Group ID} (e.g., Group 0 for core courses, Group 1 for laboratory sessions). This segmentation provides two primary benefits:
+\begin{enumerate}
+    \item \textbf{Prioritized Allocation}: Higher-priority classes can be allocated and locked first.
+    \item \textbf{Dynamic Candidate Pooling}: Students remaining unallocated after Group 0 instantly form the available candidate pool for Group 1.
+\end{enumerate}
+
+\section{Verification and Testing Strategy}
+\begin{itemize}
+    \item \textbf{Unit and Component Testing}: Validates parsing resilience against malformed CSV inputs, boundary conditions (courses requesting no TAs), and roll number string sanitization.
+    \item \textbf{Integration Testing}: Confirms transactional rollbacks, state synchronization in H2, and accurate dropdown construction in \texttt{GoogleFormsService}.
+    \item \textbf{End-to-End Simulation}: Validated using pre-packaged test data sets (\texttt{courses\_test.csv}, \texttt{students\_test.csv}, \texttt{faculty\_test.csv}, \texttt{preferences\_test.csv}) verifying the complete upload-to-email lifecycle.
+\end{itemize}
+
+\section{Milestone Status}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{0.18\textwidth}|p{0.25\textwidth}|p{0.15\textwidth}|p{0.32\textwidth}|}
+\hline
+\textbf{Phase} & \textbf{Milestone} & \textbf{Status} & \textbf{Implementation Details} \\
+\hline
+\textbf{Phase 1} & Scaffolding \& UI & Completed & Spring Boot, Thymeleaf Dashboard, H2 DB setup. \\
+\hline
+\textbf{Phase 2} & CSV Ingestion & Completed & OpenCSV with resilient dynamic header mapping. \\
+\hline
+\textbf{Phase 3} & APIs \& SMTP & Completed & Google Forms API v1 client \& Gmail SMTP integration. \\
+\hline
+\textbf{Phase 4} & Allocation Core & Completed & Group-based matching, availability locking, max-2 limit. \\
+\hline
+\textbf{Phase 5} & Documentation & Completed & Detailed setup guide, README, and system design document. \\
+\hline
+\textbf{Phase 6} & Integration Testing & Completed & End-to-end verified with bundled test CSV datasets. \\
+\hline
+\textbf{Phase 7} & Production Rollout & Ready & Production deployment via executable JAR or container. \\
+\hline
+\end{tabular}
+\end{table}
+
+\end{document}

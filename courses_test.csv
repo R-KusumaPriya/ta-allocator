@@ -1,0 +1,21 @@
+id,name,faculty_name,faculty_email,priority,group_id
+AS6000,Basic Concepts in Aerospace Engineering,Bharath Govindarajan,vijayshekar.ratcha@gmail.com,5,0
+AS5100,Mini Project,Murthy H S N,me23b115@smail.iitm.ac.in,10,0
+AS5100*,Mini Project,Nidish Narayanaa Balaji,me23b115@smail.iitm.ac.in,10,0
+AS2100,Basic Aerospace Engineering Lab,Senthil Murugan M,aayush.srinivasan@gmail.com,20,1
+AS2100-,Basic Aerospace Engineering Lab,Aniketh Kalur,me23b115@smail.iitm.ac.in,20,1
+AS2100+,Basic Aerospace Engineering Lab,Manikandan M S,kusumapriya.ratcha@gmail.com,20,1
+AS2100$,Basic Aerospace Engineering Lab,Ramakrishna P A,aayush.srinivasan@gmail.com,20,1
+AS2510,Low Speed Lab,Pradeep Kumar Seshadri,vijayshekar.ratcha@gmail.com,25,1
+AS2510$,Low Speed Lab,Pradeep Kumar Seshadri,vijayshekar.ratcha@gmail.com,25,1
+AS2510*,Low Speed Lab,Santanu Ghosh,kusumapriya.ratcha@gmail.com,25,1
+AS5110,Laboratory I,Luoyi Tao,radhikashekar.ratcha@gmail.com,26,1
+AS5110*,Laboratory I,Rajesh G,me23b115@smail.iitm.ac.in,26,1
+AS5010,Aerodynamics and Aircraft Performance,Sameen A,radhikashekar.ratcha@gmail.com,28,2
+AS5010*,Aerodynamics and Aircraft Performance,Sunetra Sarkar,kusumapriya.ratcha@gmail.com,28,2
+AS5011,Compressible Fluid Flows,Rajesh G,me23b115@smail.iitm.ac.in,28,2
+AS5011*,Compressible Fluid Flows,Nikhil Khobragade,aayush.srinivasan@gmail.com,28,2
+AS5020,Aerospace Propulsion,Amit Kumar,kusumapriya.ratcha@gmail.com,28,2
+AS5020*,Aerospace Propulsion,Ramakrishna P A,aayush.srinivasan@gmail.com,28,2
+AS6999,Special Topics in Aerospace Engineering,Sameen A,radhikashekar.ratcha@gmail.com,100,3
+AS4546,Undergraduate Research,Sameen A,radhikashekar.ratcha@gmail.com,100,3

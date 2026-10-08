@@ -55,21 +55,26 @@ public class GoogleFormsService {
                 .build();
     }
 
-    public void updateForm(double groupId, String formId) {
-        System.out.println("Starting Google Forms API Update...");
+    public String updateForm(double groupId, String formId) {
+        System.out.println("Starting Google Forms API Update for Form ID: " + formId);
         try {
             Forms formsService = getFormsService();
             Form form = formsService.forms().get(formId).execute();
 
-            List<Course> courses = courseRepository.findByGroupId(groupId);
+            // Include ALL courses present in the system (courses.csv)
+            List<Course> courses = courseRepository.findAll();
             List<Student> unassignedStudents = studentRepository.findByIsAvailableTrue();
             
             List<String> courseNames = courses.stream()
-                    .map(Course::getCourseNo)
+                    .map(c -> c.getCourseNo() != null ? c.getCourseNo().trim() : "")
+                    .filter(s -> !s.isEmpty())
+                    .distinct()
+                    .sorted()
                     .collect(Collectors.toList());
                     
             List<String> studentOptions = unassignedStudents.stream()
                     .map(s -> s.getRollNo() + ": " + s.getName() + " [" + s.getCgpa() + "] (" + s.getProgram() + ")")
+                    .sorted()
                     .collect(Collectors.toList());
                     
             studentOptions.add(0, "No preference. You choose for me.");
@@ -106,7 +111,7 @@ public class GoogleFormsService {
 
                     requests.add(new Request().setUpdateItem(new UpdateItemRequest()
                             .setItem(updatedItem)
-                            .setLocation(new com.google.api.services.forms.v1.model.Location().setIndex(item.getItemId() != null ? 0 : 0)) // Index doesn't matter for UpdateItem by ID usually, but required field sometimes. Actually Location.index is used for CreateItem. For UpdateItem it uses updateMask.
+                            .setLocation(new com.google.api.services.forms.v1.model.Location().setIndex(0))
                             .setUpdateMask("questionItem.question.choiceQuestion.options")
                     ));
                 }
@@ -115,14 +120,21 @@ public class GoogleFormsService {
             if (!requests.isEmpty()) {
                 BatchUpdateFormRequest batchRequest = new BatchUpdateFormRequest().setRequests(requests);
                 formsService.forms().batchUpdate(formId, batchRequest).execute();
-                System.out.println("Successfully updated Google Form ID: " + formId);
+                String successMsg = "Google Form (" + formId + ") successfully updated with " + courseNames.size() + 
+                                    " total courses and " + unassignedStudents.size() + " available TAs.";
+                System.out.println(successMsg);
+                return successMsg;
             } else {
-                System.out.println("No matching questions found in the form to update. Ensure you have questions titled 'Select Course' and 'TA Preference X'.");
+                String warnMsg = "No matching questions found in Google Form. Ensure you have questions titled 'Select Course' and 'TA Preference X'.";
+                System.out.println(warnMsg);
+                return warnMsg;
             }
 
         } catch (Exception e) {
-            System.err.println("Failed to update Google Form. Did you put credentials.json in src/main/resources/? Error: " + e.getMessage());
+            String errMsg = "Failed to update Google Form. Error: " + e.getMessage();
+            System.err.println(errMsg);
             e.printStackTrace();
+            return errMsg;
         }
     }
 }

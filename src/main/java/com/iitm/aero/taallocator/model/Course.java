@@ -19,11 +19,14 @@ public class Course {
     
     private String ta1;
     private String ta2;
+    private String facultyEmail;
     private String column1;
     private String column2;
     private String column3;
 
     // Getters and Setters
+    public String getFacultyEmail() { return facultyEmail; }
+    public void setFacultyEmail(String facultyEmail) { this.facultyEmail = facultyEmail; }
     public String getCourseNo() { return courseNo; }
     public void setCourseNo(String courseNo) { this.courseNo = courseNo; }
     public String getSemester() { return semester; }

@@ -112,8 +112,8 @@ public class AdminController {
     public String updateForm(@RequestParam("id") double groupId, 
                              @RequestParam("formId") String formId, 
                              RedirectAttributes redirectAttributes) {
-        googleFormsService.updateForm(groupId, formId);
-        redirectAttributes.addFlashAttribute("message", "Google Form updated (Check console log for mock info).");
+        String result = googleFormsService.updateForm(groupId, formId);
+        redirectAttributes.addFlashAttribute("message", result);
         return "redirect:/group?id=" + groupId;
     }
 
@@ -123,8 +123,8 @@ public class AdminController {
                                        @RequestParam("deadline") String deadline,
                                        @RequestParam("formLink") String formLink,
                                        RedirectAttributes redirectAttributes) {
-        emailService.sendPreferenceEmails(groupId, term, deadline, formLink);
-        redirectAttributes.addFlashAttribute("message", "Preference emails sent to faculty.");
+        String result = emailService.sendPreferenceEmails(groupId, term, deadline, formLink);
+        redirectAttributes.addFlashAttribute("message", result);
         return "redirect:/group?id=" + groupId;
     }
 
@@ -139,8 +139,8 @@ public class AdminController {
     public String sendConfirmationEmails(@RequestParam("id") double groupId,
                                          @RequestParam("term") String term,
                                          RedirectAttributes redirectAttributes) {
-        emailService.sendConfirmationEmails(groupId, term);
-        redirectAttributes.addFlashAttribute("message", "Confirmation emails sent.");
+        String result = emailService.sendConfirmationEmails(groupId, term);
+        redirectAttributes.addFlashAttribute("message", result);
         return "redirect:/group?id=" + groupId;
     }
 }

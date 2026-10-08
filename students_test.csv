@@ -1,0 +1,47 @@
+id,name,email,gpa,program,advisor,available
+AE22B003,Purna Ananthkrishnan,kusumapriya.ratcha@gmail.com,9.81,BTech,,TRUE
+AE22B102,Anshita Hegde,me23b115@smail.iitm.ac.in,9.48,BTech,,TRUE
+AE22B110,Yash Shajil,aayush.srinivasan@gmail.com,9.46,BTech,,TRUE
+AE22B010,Bhadra S,vijayshekar.ratcha@gmail.com,9.2,BTech,,TRUE
+AE22B008,U Shriram,radhikashekar.ratcha@gmail.com,9.17,BTech,,TRUE
+AE22B066,Priyanka G,kusumapriya.ratcha@gmail.com,9.16,BTech,,TRUE
+AE22B028,Charukhesh B R,me23b115@smail.iitm.ac.in,9.12,BTech,,TRUE
+AE22B060,Stany Benny,aayush.srinivasan@gmail.com,8.81,BTech,,TRUE
+AE22B067,Kavin Arvinth Ravichandran,vijayshekar.ratcha@gmail.com,8.78,BTech,,TRUE
+AE22B006,Karthik Puranam,radhikashekar.ratcha@gmail.com,8.76,BTech,,TRUE
+AE22B109,Rajasegarane R,kusumapriya.ratcha@gmail.com,8.68,BTech,,TRUE
+AE22B026,Avuthu Neeraja Reddy,me23b115@smail.iitm.ac.in,8.67,BTech,,FALSE
+AE22B070,Chirag V Gaonkar,aayush.srinivasan@gmail.com,8.67,BTech,,TRUE
+AE22B002,Kancharlapalli Sai Siddhartha Bajrang,vijayshekar.ratcha@gmail.com,8.54,BTech,,TRUE
+AE22B007,Priyavrata Tiwari,radhikashekar.ratcha@gmail.com,8.53,BTech,,TRUE
+AE22B030,Dhyan G,kusumapriya.ratcha@gmail.com,8.53,BTech,,TRUE
+AE22B059,Sreeram Madhavan V,me23b115@smail.iitm.ac.in,8.53,BTech,,TRUE
+AE22B004,Pawde Medhaj Raghuveer,aayush.srinivasan@gmail.com,8.36,BTech,,TRUE
+AE22B013,Sai Suddhir A B,vijayshekar.ratcha@gmail.com,8.06,BTech,,TRUE
+AE22B105,Jahaan Ritesh Shah,radhikashekar.ratcha@gmail.com,7.88,BTech,,TRUE
+AE21D001,DD Candidate D001,kusumapriya.ratcha@gmail.com,8.2,DD,Dr. Iyer,TRUE
+AE21D002,DD Candidate D002,me23b115@smail.iitm.ac.in,8.4,DD,Dr. Ramesh,TRUE
+AE25M021,MS Candidate M021,aayush.srinivasan@gmail.com,8.9,MS,Dr. Iyer,TRUE
+AE25M028,MS Candidate M028,vijayshekar.ratcha@gmail.com,8.7,MS,Dr. Menon,TRUE
+AE25M034,MS Candidate M034,radhikashekar.ratcha@gmail.com,9,MS,Dr. Iyer,TRUE
+AE25M020,MS Candidate M020,kusumapriya.ratcha@gmail.com,8.5,MS,Dr. Ramesh,TRUE
+AE25M033,MS Candidate M033,me23b115@smail.iitm.ac.in,8.6,MS,Dr. Menon,TRUE
+AE25M037,MS Candidate M037,aayush.srinivasan@gmail.com,8.8,MS,Dr. Iyer,TRUE
+AE25M010,MS Candidate M010,vijayshekar.ratcha@gmail.com,9.1,MS,Dr. Ramesh,TRUE
+AE25M040,MS Candidate M040,radhikashekar.ratcha@gmail.com,8.4,MS,Dr. Menon,TRUE
+AE24S019,MTech Candidate S019,kusumapriya.ratcha@gmail.com,8.5,MTech,,TRUE
+AE24S005,MTech Candidate S005,me23b115@smail.iitm.ac.in,8.3,MTech,,TRUE
+AE24D004,PhD Candidate D004,aayush.srinivasan@gmail.com,9.2,PhD,Dr. Krishnan,TRUE
+AE23D205,PhD Candidate D205,vijayshekar.ratcha@gmail.com,8.9,PhD,Dr. Suresh,TRUE
+AE25D006,PhD Candidate D006,radhikashekar.ratcha@gmail.com,8.7,PhD,Dr. Krishnan,TRUE
+AE25D012,PhD Candidate D012,kusumapriya.ratcha@gmail.com,9,PhD,Dr. Meera,TRUE
+AE24D203,PhD Candidate D203,me23b115@smail.iitm.ac.in,8.8,PhD,Dr. Suresh,TRUE
+AE24D403,PhD Candidate D403,aayush.srinivasan@gmail.com,8.6,PhD,Dr. Krishnan,TRUE
+AE23D201,PhD Candidate D201,vijayshekar.ratcha@gmail.com,9.3,PhD,Dr. Meera,TRUE
+AE24D407,PhD Candidate D407,radhikashekar.ratcha@gmail.com,8.5,PhD,Dr. Suresh,TRUE
+AE24D012,PhD Candidate D012B,kusumapriya.ratcha@gmail.com,8.9,PhD,Dr. Krishnan,TRUE
+AE23D006,PhD Candidate D006B,me23b115@smail.iitm.ac.in,9.1,PhD,Dr. Meera,TRUE
+AE24D034,PhD Candidate D034,aayush.srinivasan@gmail.com,8.7,PhD,Dr. Suresh,TRUE
+AE23D018,PhD Candidate D018,vijayshekar.ratcha@gmail.com,8.6,PhD,Dr. Krishnan,TRUE
+AE23D002,PhD Candidate D002,radhikashekar.ratcha@gmail.com,9,PhD,Dr. Meera,TRUE
+AE24D020,PhD Candidate D020,kusumapriya.ratcha@gmail.com,8.8,PhD,Dr. Suresh,TRUE
