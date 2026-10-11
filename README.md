@@ -25,7 +25,9 @@ The system replaces manual spreadsheets and email chains with a unified web inte
 - **Automated Email Dispatch:** Integrates with Gmail SMTP via Spring's `JavaMailSender` to send personalized preference collection requests and final allotment confirmations to faculty members.
 - **Robust CSV Ingestion:** Uses OpenCSV with dynamic, case-insensitive header mapping that gracefully accepts varying column header names (e.g., `id`, `courseno`, `course no`).
 - **Group/Batch Processing:** Supports dividing allocations into Course Groups (e.g., Core courses in Group 0, Lab courses in Group 1) to enable staggered allocation rounds.
-- **Embedded Database & Admin Console:** Runs on an in-memory H2 database with Spring Data JPA and an accessible web console for runtime inspection.
+- **Persistent File-Based H2 Database:** Data is stored safely on disk in `./data/tadb`, ensuring that uploaded students, courses, and allocation results survive server restarts.
+- **One-Click CSV Export:** Export complete department allocations or group-specific results directly to a CSV file with student roll numbers and full names resolved for reporting to the HOD.
+- **Embedded Admin Database Console:** Web console accessible at `/h2-console` for direct SQL queries and auditing.
 
 ---
 
@@ -154,9 +156,10 @@ The application includes robust header detection. The table below lists the reco
 All runtime configurations reside in `src/main/resources/application.properties`:
 
 ```properties
-# Application & In-Memory Database
+# Application & File-Based Database (Persisted on disk)
 spring.application.name=ta-allocator
-spring.datasource.url=jdbc:h2:mem:tadb
+spring.datasource.url=jdbc:h2:file:./data/tadb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=
 spring.h2.console.enabled=true
@@ -185,5 +188,5 @@ For detailed instructions on obtaining a Gmail App Password and Google Cloud Ser
   Ensure the Service Account email (from `credentials.json`, e.g., `form-updater@ta-allocator.iam.gserviceaccount.com`) has been explicitly added as an **Editor** in your Google Form's collaborator/share settings.
 - **Email sending fails with AuthenticationFailedException:**
   Standard Gmail passwords will not work. You must enable 2-Step Verification and generate a dedicated 16-character **App Password** from your Google Account settings. Remove any spaces when pasting it into `application.properties`.
-- **Database data resets upon application restart:**
-  The system uses H2 in-memory storage (`jdbc:h2:mem:tadb`), which intentionally initializes fresh on each launch. To preserve data across restarts, re-upload the master CSVs or configure a persistent file-based URL in `application.properties`.
+- **Database data persistence:**
+  The application is configured to save data to `./data/tadb.mv.db`. All uploaded courses, students, and allocations survive application restarts. To reset the database to a blank slate, simply delete the local `./data` folder while the application is stopped.

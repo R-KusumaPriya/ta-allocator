@@ -76,6 +76,7 @@ public class DataUploadService {
                 }
                 courses.add(course);
             }
+            courseRepository.deleteAll();
             courseRepository.saveAll(courses);
         }
     }
@@ -128,6 +129,7 @@ public class DataUploadService {
                 
                 students.add(student);
             }
+            studentRepository.deleteAll();
             studentRepository.saveAll(students);
         }
     }
@@ -145,6 +147,7 @@ public class DataUploadService {
                 if (record.length > 2) faculty.setCode(record[2].trim());
                 faculties.add(faculty);
             }
+            facultyRepository.deleteAll();
             facultyRepository.saveAll(faculties);
         }
     }
@@ -189,5 +192,50 @@ public class DataUploadService {
             }
             preferenceRepository.saveAll(preferences);
         }
+    }
+
+    public void exportAllocationsCsv(Double groupId, java.io.Writer writer) throws Exception {
+        List<Course> courses;
+        if (groupId != null) {
+            courses = courseRepository.findByGroupId(groupId);
+        } else {
+            courses = courseRepository.findAll();
+        }
+
+        try (com.opencsv.CSVWriter csvWriter = new com.opencsv.CSVWriter(writer)) {
+            String[] header = {
+                "Course No", "Course Name", "Instructor Name", "Faculty Email",
+                "Priority", "Group ID", "TA 1 Roll", "TA 1 Name", "TA 2 Roll", "TA 2 Name"
+            };
+            csvWriter.writeNext(header);
+
+            for (Course course : courses) {
+                String ta1Name = resolveStudentName(course.getTa1());
+                String ta2Name = resolveStudentName(course.getTa2());
+
+                String[] row = {
+                    course.getCourseNo() != null ? course.getCourseNo() : "",
+                    course.getCourseName() != null ? course.getCourseName() : "",
+                    course.getInstructorName() != null ? course.getInstructorName() : "",
+                    course.getFacultyEmail() != null ? course.getFacultyEmail() : "",
+                    String.valueOf(course.getPriority()),
+                    String.valueOf(course.getGroupId()),
+                    course.getTa1() != null ? course.getTa1() : "",
+                    ta1Name,
+                    course.getTa2() != null ? course.getTa2() : "",
+                    ta2Name
+                };
+                csvWriter.writeNext(row);
+            }
+        }
+    }
+
+    private String resolveStudentName(String rollNo) {
+        if (rollNo == null || rollNo.trim().isEmpty() || rollNo.equalsIgnoreCase("xxxx")) {
+            return "";
+        }
+        return studentRepository.findById(rollNo.trim())
+                .map(Student::getName)
+                .orElse("");
     }
 }

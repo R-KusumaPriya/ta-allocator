@@ -128,14 +128,23 @@ public class EmailService {
     private String resolveFacultyEmail(Course course) {
         if (course == null) return null;
         
-        // 1. Try finding in faculty table by exact name
+        // 1. Try finding in faculty table by name (case-insensitive, handles duplicates safely)
         if (course.getInstructorName() != null && !course.getInstructorName().trim().isEmpty()) {
-            Faculty faculty = facultyRepository.findByNameIgnoreCase(course.getInstructorName().trim());
-            if (faculty != null && faculty.getEmail() != null && !faculty.getEmail().trim().isEmpty()) {
-                return faculty.getEmail().trim();
+            try {
+                Faculty f = facultyRepository.findByNameIgnoreCase(course.getInstructorName().trim());
+                if (f != null && f.getEmail() != null && !f.getEmail().trim().isEmpty()) {
+                    return f.getEmail().trim();
+                }
+            } catch (Exception ignored) {
+                // Catches NonUniqueResultException if duplicates exist
+            }
+
+            List<Faculty> matches = facultyRepository.findAllByNameIgnoreCase(course.getInstructorName().trim());
+            if (matches != null && !matches.isEmpty() && matches.get(0).getEmail() != null && !matches.get(0).getEmail().trim().isEmpty()) {
+                return matches.get(0).getEmail().trim();
             }
             
-            // 2. Try normalized whitespace matching in faculty table
+            // 2. Try normalized whitespace matching
             String normalizedCourseInstructor = course.getInstructorName().trim().replaceAll("\\s+", " ").toLowerCase();
             List<Faculty> allFaculty = facultyRepository.findAll();
             for (Faculty f : allFaculty) {

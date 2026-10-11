@@ -7,6 +7,8 @@ import com.iitm.aero.taallocator.service.AllocationService;
 import com.iitm.aero.taallocator.service.DataUploadService;
 import com.iitm.aero.taallocator.service.EmailService;
 import com.iitm.aero.taallocator.service.GoogleFormsService;
+import com.iitm.aero.taallocator.repository.FacultyRepository;
+import com.iitm.aero.taallocator.repository.PreferenceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
 
@@ -31,6 +34,12 @@ public class AdminController {
     private StudentRepository studentRepository;
     
     @Autowired
+    private FacultyRepository facultyRepository;
+    
+    @Autowired
+    private PreferenceRepository preferenceRepository;
+    
+    @Autowired
     private AllocationService allocationService;
     
     @Autowired
@@ -38,6 +47,20 @@ public class AdminController {
     
     @Autowired
     private GoogleFormsService googleFormsService;
+
+    @PostMapping("/admin/reset")
+    public String resetAllData(RedirectAttributes redirectAttributes) {
+        try {
+            preferenceRepository.deleteAll();
+            courseRepository.deleteAll();
+            studentRepository.deleteAll();
+            facultyRepository.deleteAll();
+            redirectAttributes.addFlashAttribute("message", "All data and allocations have been reset successfully. You can now upload fresh CSV files.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to reset data: " + e.getMessage());
+        }
+        return "redirect:/";
+    }
 
     @GetMapping("/")
     public String index(Model model) {
@@ -112,8 +135,12 @@ public class AdminController {
     public String updateForm(@RequestParam("id") double groupId, 
                              @RequestParam("formId") String formId, 
                              RedirectAttributes redirectAttributes) {
-        String result = googleFormsService.updateForm(groupId, formId);
-        redirectAttributes.addFlashAttribute("message", result);
+        try {
+            String result = googleFormsService.updateForm(groupId, formId);
+            redirectAttributes.addFlashAttribute("message", result);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error syncing Google Form: " + e.getMessage());
+        }
         return "redirect:/group?id=" + groupId;
     }
 
@@ -123,15 +150,23 @@ public class AdminController {
                                        @RequestParam("deadline") String deadline,
                                        @RequestParam("formLink") String formLink,
                                        RedirectAttributes redirectAttributes) {
-        String result = emailService.sendPreferenceEmails(groupId, term, deadline, formLink);
-        redirectAttributes.addFlashAttribute("message", result);
+        try {
+            String result = emailService.sendPreferenceEmails(groupId, term, deadline, formLink);
+            redirectAttributes.addFlashAttribute("message", result);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error sending preference emails: " + e.getMessage());
+        }
         return "redirect:/group?id=" + groupId;
     }
 
     @PostMapping("/group/allocate")
     public String runAllocation(@RequestParam("id") double groupId, RedirectAttributes redirectAttributes) {
-        allocationService.allocateGroup(groupId);
-        redirectAttributes.addFlashAttribute("message", "TA Allocation completed for Group " + groupId + ".");
+        try {
+            allocationService.allocateGroup(groupId);
+            redirectAttributes.addFlashAttribute("message", "TA Allocation completed for Group " + groupId + ".");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error running allocation: " + e.getMessage());
+        }
         return "redirect:/group?id=" + groupId;
     }
 
@@ -139,8 +174,21 @@ public class AdminController {
     public String sendConfirmationEmails(@RequestParam("id") double groupId,
                                          @RequestParam("term") String term,
                                          RedirectAttributes redirectAttributes) {
-        String result = emailService.sendConfirmationEmails(groupId, term);
-        redirectAttributes.addFlashAttribute("message", result);
+        try {
+            String result = emailService.sendConfirmationEmails(groupId, term);
+            redirectAttributes.addFlashAttribute("message", result);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error sending confirmation emails: " + e.getMessage());
+        }
         return "redirect:/group?id=" + groupId;
+    }
+
+    @GetMapping("/export/results")
+    public void exportResults(@RequestParam(value = "groupId", required = false) Double groupId,
+                              HttpServletResponse response) throws Exception {
+        response.setContentType("text/csv");
+        String filename = (groupId != null) ? "ta_allocations_group_" + groupId + ".csv" : "ta_allocations_all.csv";
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+        dataUploadService.exportAllocationsCsv(groupId, response.getWriter());
     }
 }

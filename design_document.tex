@@ -26,6 +26,7 @@ Historically, TA allocations were handled via fragmented Google Sheets and manua
     \item Bidirectional integration with the \textbf{Google Forms API (v1)} to dynamically populate live dropdown questions with eligible courses and currently unassigned students.
     \item Automated email dispatch via \textbf{Gmail SMTP (JavaMailSender)} for professor preference requests and official TA allotment confirmations.
     \item A constraint-satisfaction allocation algorithm that respects faculty choices, course priorities, availability locks, and course quotas.
+    \item One-click export of final allotments to standardized CSV spreadsheets for official archival.
 \end{enumerate}
 
 \section{System Architecture}
@@ -33,9 +34,9 @@ The application adopts an enterprise \textbf{Model-View-Controller (MVC)} patter
 
 \begin{itemize}
     \item \textbf{Presentation Layer (View):} Server-side rendered HTML using \textbf{Thymeleaf}. The presentation layer provides a master Admin Dashboard (\texttt{dashboard.html}) for file uploads and global metric tracking, along with a per-bucket management interface (\texttt{group-manager.html}).
-    \item \textbf{Web/Controller Layer:} Handled by \texttt{AdminController.java}, which maps HTTP GET and POST requests, coordinates file streaming via \texttt{MultipartFile}, and manages view redirection with user flash messages.
+    \item \textbf{Web/Controller Layer:} Handled by \texttt{AdminController.java}, which maps HTTP GET and POST requests, coordinates file streaming via \texttt{MultipartFile}, serves CSV export downloads, and manages view redirection with user flash messages.
     \item \textbf{Business Service Layer:} Modular Spring services (\texttt{DataUploadService}, \texttt{AllocationService}, \texttt{EmailService}, and \texttt{GoogleFormsService}) encapsulating data processing, third-party API communication, and allocation algorithms.
-    \item \textbf{Persistence Layer (Model/Data):} Built on \textbf{Spring Data JPA} and \textbf{Hibernate} backed by an in-memory \textbf{H2 Database} (\texttt{jdbc:h2:mem:tadb}). State is maintained during runtime with low query latency and zero external database installation overhead.
+    \item \textbf{Persistence Layer (Model/Data):} Built on \textbf{Spring Data JPA} and \textbf{Hibernate} backed by an embedded file-based \textbf{H2 Database} (\texttt{jdbc:h2:file:./data/tadb}). State is preserved on disk across application restarts with zero external database installation overhead.
 \end{itemize}
 
 \subsection{External Integrations}

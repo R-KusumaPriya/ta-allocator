@@ -136,12 +136,18 @@ The project includes four pre-built test CSV files located in the root directory
 
 ---
 
-## 5. Inspecting the H2 In-Memory Database
+## 5. Exporting Results & Inspecting the Database
 
-While the application is running, you can inspect the raw database tables at any time:
+### Downloading the Final Master Spreadsheet (CSV)
+1. **Global Export:** On the main Dashboard ([http://localhost:8080/](http://localhost:8080/)), click the green **"📥 Export All Allocations (CSV)"** button.
+2. **Group-Specific Export:** Inside any Group Manager view, click **"📥 Export Group CSV"** to download only that group's course assignments.
+3. The downloaded CSV contains complete details: `Course No`, `Course Name`, `Instructor Name`, `Faculty Email`, `Priority`, `Group ID`, `TA 1 Roll`, `TA 1 Name`, `TA 2 Roll`, and `TA 2 Name`.
+
+### Inspecting Database Tables Directly
+The database is persisted to disk in the `./data/tadb.mv.db` file, meaning data is saved across server restarts.
 1. Open [http://localhost:8080/h2-console](http://localhost:8080/h2-console) in your browser.
 2. Ensure the connection settings are:
-   - **JDBC URL:** `jdbc:h2:mem:tadb`
+   - **JDBC URL:** `jdbc:h2:file:./data/tadb`
    - **User Name:** `sa`
    - **Password:** *(leave blank)*
 3. Click **Connect**.

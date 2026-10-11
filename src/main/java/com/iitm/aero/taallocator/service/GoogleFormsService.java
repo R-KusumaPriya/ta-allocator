@@ -9,6 +9,7 @@ import com.google.api.services.forms.v1.model.BatchUpdateFormRequest;
 import com.google.api.services.forms.v1.model.ChoiceQuestion;
 import com.google.api.services.forms.v1.model.Form;
 import com.google.api.services.forms.v1.model.Item;
+import com.google.api.services.forms.v1.model.Location;
 import com.google.api.services.forms.v1.model.Option;
 import com.google.api.services.forms.v1.model.Question;
 import com.google.api.services.forms.v1.model.QuestionItem;
@@ -81,39 +82,50 @@ public class GoogleFormsService {
             studentOptions.add(1, "I do not want TAs.");
 
             List<Request> requests = new ArrayList<>();
+            List<Item> items = form.getItems();
 
-            for (Item item : form.getItems()) {
-                if (item.getTitle() == null) continue;
-                
-                List<String> optionsToSet = null;
-                
-                if (item.getTitle().contains("Select Course")) {
-                    optionsToSet = courseNames;
-                } else if (item.getTitle().contains("TA Preference")) {
-                    optionsToSet = studentOptions;
-                }
-
-                if (optionsToSet != null && item.getQuestionItem() != null) {
-                    List<Option> optionsList = optionsToSet.stream()
-                            .map(opt -> new Option().setValue(opt))
-                            .collect(Collectors.toList());
-
-                    Question question = item.getQuestionItem().getQuestion();
-                    if (question.getChoiceQuestion() == null) {
-                        question.setChoiceQuestion(new ChoiceQuestion().setType("DROP_DOWN"));
+            if (items != null) {
+                for (int i = 0; i < items.size(); i++) {
+                    Item item = items.get(i);
+                    if (item == null || item.getTitle() == null) continue;
+                    
+                    String title = item.getTitle().trim().toLowerCase();
+                    List<String> optionsToSet = null;
+                    
+                    // Priority matching: TA preference questions get students, course questions get courses
+                    if (title.contains("preference") || title.contains("ta") || title.contains("choice")) {
+                        optionsToSet = studentOptions;
+                    } else if (title.contains("course")) {
+                        optionsToSet = courseNames;
                     }
-                    question.getChoiceQuestion().setOptions(optionsList);
 
-                    Item updatedItem = new Item()
-                            .setItemId(item.getItemId())
-                            .setTitle(item.getTitle())
-                            .setQuestionItem(new QuestionItem().setQuestion(question));
+                    if (optionsToSet != null && item.getQuestionItem() != null) {
+                        List<Option> optionsList = optionsToSet.stream()
+                                .map(opt -> new Option().setValue(opt))
+                                .collect(Collectors.toList());
 
-                    requests.add(new Request().setUpdateItem(new UpdateItemRequest()
-                            .setItem(updatedItem)
-                            .setLocation(new com.google.api.services.forms.v1.model.Location().setIndex(0))
-                            .setUpdateMask("questionItem.question.choiceQuestion.options")
-                    ));
+                        Question question = item.getQuestionItem().getQuestion();
+                        if (question.getChoiceQuestion() == null) {
+                            question.setChoiceQuestion(new ChoiceQuestion().setType("DROP_DOWN"));
+                        }
+                        question.getChoiceQuestion().setOptions(optionsList);
+
+                        Item updatedItem = new Item()
+                                .setItemId(item.getItemId())
+                                .setTitle(item.getTitle())
+                                .setQuestionItem(new QuestionItem().setQuestion(question));
+
+                        // Location is REQUIRED by Google Forms API:
+                        // Passing the item's actual current index 'i' updates it in-place without shifting or scrambling
+                        requests.add(new Request().setUpdateItem(new UpdateItemRequest()
+                                .setItem(updatedItem)
+                                .setLocation(new Location().setIndex(i))
+                                .setUpdateMask("questionItem.question.choiceQuestion")
+                        ));
+
+                        System.out.println("  -> Mapped question [" + i + "] '" + item.getTitle() + 
+                                           "' to " + (optionsToSet == courseNames ? "COURSES (" + courseNames.size() + " options)" : "TA PREFERENCES (" + studentOptions.size() + " options)"));
+                    }
                 }
             }
 

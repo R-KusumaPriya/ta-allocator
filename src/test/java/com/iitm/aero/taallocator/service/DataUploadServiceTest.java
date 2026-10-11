@@ -185,4 +185,62 @@ public class DataUploadServiceTest {
         assertEquals("AE22B105", savedPrefs.get(0).getTaPreference1());
         assertEquals("AE23D205", savedPrefs.get(0).getTaPreference2());
     }
+
+    @Test
+    void testExportAllocationsCsv_AllCourses() throws Exception {
+        // Arrange
+        Course course = new Course();
+        course.setCourseNo("AS2100");
+        course.setCourseName("Basic Lab");
+        course.setInstructorName("Dr. Senthil");
+        course.setFacultyEmail("senthil@iitm.ac.in");
+        course.setPriority(20);
+        course.setGroupId(1.0);
+        course.setTa1("AE22B001");
+        course.setTa2("AE22B002");
+
+        Student s1 = new Student();
+        s1.setRollNo("AE22B001");
+        s1.setName("Alice");
+
+        Student s2 = new Student();
+        s2.setRollNo("AE22B002");
+        s2.setName("Bob");
+
+        when(courseRepository.findAll()).thenReturn(java.util.Collections.singletonList(course));
+        when(studentRepository.findById("AE22B001")).thenReturn(java.util.Optional.of(s1));
+        when(studentRepository.findById("AE22B002")).thenReturn(java.util.Optional.of(s2));
+
+        java.io.StringWriter stringWriter = new java.io.StringWriter();
+
+        // Act
+        dataUploadService.exportAllocationsCsv(null, stringWriter);
+
+        // Assert
+        String csvOutput = stringWriter.toString();
+        assertTrue(csvOutput.contains("Course No"));
+        assertTrue(csvOutput.contains("AS2100"));
+        assertTrue(csvOutput.contains("Alice"));
+        assertTrue(csvOutput.contains("Bob"));
+    }
+
+    @Test
+    void testExportAllocationsCsv_SpecificGroup() throws Exception {
+        // Arrange
+        Course course = new Course();
+        course.setCourseNo("AS6000");
+        course.setGroupId(0.0);
+
+        when(courseRepository.findByGroupId(0.0)).thenReturn(java.util.Collections.singletonList(course));
+
+        java.io.StringWriter stringWriter = new java.io.StringWriter();
+
+        // Act
+        dataUploadService.exportAllocationsCsv(0.0, stringWriter);
+
+        // Assert
+        String csvOutput = stringWriter.toString();
+        assertTrue(csvOutput.contains("AS6000"));
+        verify(courseRepository, times(1)).findByGroupId(0.0);
+    }
 }
