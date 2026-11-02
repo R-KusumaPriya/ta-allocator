@@ -1,9 +1,11 @@
 package com.iitm.aero.taallocator.service;
 
 import com.iitm.aero.taallocator.model.Course;
+import com.iitm.aero.taallocator.model.Faculty;
 import com.iitm.aero.taallocator.model.PreferenceResponse;
 import com.iitm.aero.taallocator.model.Student;
 import com.iitm.aero.taallocator.repository.CourseRepository;
+import com.iitm.aero.taallocator.repository.FacultyRepository;
 import com.iitm.aero.taallocator.repository.PreferenceRepository;
 import com.iitm.aero.taallocator.repository.StudentRepository;
 import com.iitm.aero.taallocator.util.HungarianAlgorithm;
@@ -32,6 +34,9 @@ public class AllocationService {
     
     @Autowired
     private PreferenceRepository preferenceRepository;
+
+    @Autowired(required = false)
+    private FacultyRepository facultyRepository;
 
     public void allocateGroup(double groupId) {
         List<Course> courses = courseRepository.findByGroupId(groupId);
@@ -161,8 +166,13 @@ public class AllocationService {
                 // Any available student can be assigned with base score + CGPA
                 for (int j = 0; j < nStudents; j++) {
                     Student s = availableStudents.get(j);
-                    double cgpa = parseCgpa(s.getCgpa());
-                    weights[i][j] = 1000.0 + (cgpa * 20.0) + priorityBonus;
+                    boolean isRestricted = isRestrictedStudentFaculty(s.getRollNo(), course, pref);
+                    if (isRestricted) {
+                        weights[i][j] = 0.0; // Student must not be allocated to this faculty member
+                    } else {
+                        double cgpa = parseCgpa(s.getCgpa());
+                        weights[i][j] = 1000.0 + (cgpa * 20.0) + priorityBonus;
+                    }
                 }
             } else {
                 // Explicit ranked preference scores:
@@ -180,8 +190,13 @@ public class AllocationService {
                     String rollNo = extractRollNo(pStr);
                     if (rollNo != null && rollToAvailableIdx.containsKey(rollNo)) {
                         int sIdx = rollToAvailableIdx.get(rollNo);
-                        // Assign weight for this student
-                        weights[i][sIdx] = choiceScores[rank] + priorityBonus;
+                        boolean isRestricted = isRestrictedStudentFaculty(rollNo, course, pref);
+                        if (isRestricted) {
+                            weights[i][sIdx] = 0.0; // Student must not be allocated to this faculty member
+                        } else {
+                            // Assign weight for this student
+                            weights[i][sIdx] = choiceScores[rank] + priorityBonus;
+                        }
                     }
                 }
             }
@@ -202,25 +217,33 @@ public class AllocationService {
                 CourseSlot slot = slots.get(i);
                 Course course = slot.course;
 
-                // Safety guard against double assignment
-                if (assignedStudentsInThisRun.contains(student.getRollNo())) {
+                // Safety guard against restricted student-faculty allocation
+                boolean isRestricted = isRestrictedStudentFaculty(student.getRollNo(), course, coursePrefMap.get(course.getCourseNo().trim()));
+                if (isRestricted) {
+                    System.out.println("  -> [Restriction Skipped] Student " + student.getRollNo() 
+                        + " cannot be allocated to instructor " + course.getInstructorName());
                     continue;
+                } else {
+                    // Safety guard against double assignment
+                    if (assignedStudentsInThisRun.contains(student.getRollNo())) {
+                        continue;
+                    }
+                    assignedStudentsInThisRun.add(student.getRollNo());
+
+                    if (slot.slotNumber == 1) {
+                        course.setTa1(student.getRollNo());
+                    } else if (slot.slotNumber == 2) {
+                        course.setTa2(student.getRollNo());
+                    }
+
+                    student.setAvailable(false);
+                    student.setCourse(course.getCourseNo());
+                    studentRepository.save(student);
+
+                    System.out.println("  -> [Hungarian Optimal] Course " + course.getCourseNo() 
+                        + " (TA " + slot.slotNumber + ") assigned to " + student.getRollNo() 
+                        + " (" + student.getName() + ") with weight " + weights[i][studentIdx]);
                 }
-                assignedStudentsInThisRun.add(student.getRollNo());
-
-                if (slot.slotNumber == 1) {
-                    course.setTa1(student.getRollNo());
-                } else if (slot.slotNumber == 2) {
-                    course.setTa2(student.getRollNo());
-                }
-
-                student.setAvailable(false);
-                student.setCourse(course.getCourseNo());
-                studentRepository.save(student);
-
-                System.out.println("  -> [Hungarian Optimal] Course " + course.getCourseNo() 
-                    + " (TA " + slot.slotNumber + ") assigned to " + student.getRollNo() 
-                    + " (" + student.getName() + ") with weight " + weights[i][studentIdx]);
             }
         }
 
@@ -229,6 +252,49 @@ public class AllocationService {
             courseRepository.save(course);
         }
         System.out.println("Hungarian Allocation successfully completed for Group " + groupId);
+    }
+
+    /**
+     * Constraint check: ensures a particular student is not allocated to a given faculty member from faculty.csv.
+     * For example, student with roll no. AE22B058 must not be assigned to Prof. Nidish.
+     *
+     * @param rollNo student roll number
+     * @param course the course being allocated
+     * @param pref the preference response for this course
+     * @return true if the student is restricted from being allocated to this faculty member, false otherwise
+     */
+    boolean isRestrictedStudentFaculty(String rollNo, Course course, PreferenceResponse pref) {
+        if (rollNo == null) {
+            return false;
+        }
+        String cleanRoll = rollNo.trim().toUpperCase();
+
+        String instructor = "";
+        if (course != null && course.getInstructorName() != null && !course.getInstructorName().trim().isEmpty()) {
+            instructor = course.getInstructorName().trim().toLowerCase();
+        } else if (pref != null && pref.getFacultyName() != null && !pref.getFacultyName().trim().isEmpty()) {
+            instructor = pref.getFacultyName().trim().toLowerCase();
+        }
+
+        if (facultyRepository != null && course != null && course.getInstructorName() != null) {
+            try {
+                Faculty f = facultyRepository.findByNameIgnoreCase(course.getInstructorName().trim());
+                if (f != null && f.getName() != null) {
+                    instructor = f.getName().trim().toLowerCase();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Variable with if-else condition to ensure student is not allocated
+        boolean isRestricted;
+        if (cleanRoll.equals("AE22B058") && instructor.contains("nidish")) {
+            isRestricted = true;
+        } else {
+            isRestricted = false;
+        }
+
+        return isRestricted;
     }
 
     private double parseCgpa(String cgpaStr) {

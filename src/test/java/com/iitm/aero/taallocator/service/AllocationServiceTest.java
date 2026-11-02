@@ -276,4 +276,75 @@ public class AllocationServiceTest {
         assertEquals("AE22B001", course.getTa1());
         assertFalse(student1.isAvailable());
     }
+
+    @Test
+    void testAllocateGroup_RestrictedStudentAE22B058NotAllocatedToNidish_ExplicitPreference() {
+        // Arrange: Nidish requests AE22B058 as Choice 1 and AE22B001 as Choice 2
+        course.setInstructorName("Nidish Narayanaa Balaji");
+        pref.setFacultyName("Nidish Narayanaa Balaji");
+        pref.setTaPreference1("AE22B058: Restricted Student");
+        pref.setTaPreference2("AE22B001: Student One");
+
+        Student restrictedStudent = new Student();
+        restrictedStudent.setRollNo("AE22B058");
+        restrictedStudent.setAvailable(true);
+
+        when(courseRepository.findByGroupId(5.0)).thenReturn(Collections.singletonList(course));
+        when(preferenceRepository.findAll()).thenReturn(Collections.singletonList(pref));
+        when(studentRepository.findAll()).thenReturn(Arrays.asList(restrictedStudent, student1));
+
+        // Act
+        allocationService.allocateGroup(5.0);
+
+        // Assert: AE22B058 must NOT be allocated to Prof. Nidish; AE22B001 should be allocated instead
+        assertNotEquals("AE22B058", course.getTa1());
+        assertNotEquals("AE22B058", course.getTa2());
+        assertEquals("AE22B001", course.getTa1());
+        assertTrue(restrictedStudent.isAvailable(), "Restricted student should remain available");
+        assertFalse(student1.isAvailable(), "Student 1 should be allocated");
+    }
+
+    @Test
+    void testAllocateGroup_RestrictedStudentAE22B058NotAllocatedToNidish_NoPreference() {
+        // Arrange: Nidish has "No preference. You choose for me."
+        course.setInstructorName("Prof. Nidish");
+        pref.setFacultyName("Prof. Nidish");
+        pref.setTaPreference1("No preference. You choose for me.");
+
+        Student restrictedStudent = new Student();
+        restrictedStudent.setRollNo("AE22B058");
+        restrictedStudent.setCgpa("9.8");
+        restrictedStudent.setAvailable(true);
+
+        when(courseRepository.findByGroupId(5.0)).thenReturn(Collections.singletonList(course));
+        when(preferenceRepository.findAll()).thenReturn(Collections.singletonList(pref));
+        when(studentRepository.findAll()).thenReturn(Arrays.asList(restrictedStudent, student1));
+
+        // Act
+        allocationService.allocateGroup(5.0);
+
+        // Assert: AE22B058 must not be assigned to Prof. Nidish even with higher CGPA
+        assertNotEquals("AE22B058", course.getTa1());
+        assertNotEquals("AE22B058", course.getTa2());
+        assertEquals("AE22B001", course.getTa1());
+        assertTrue(restrictedStudent.isAvailable());
+    }
+
+    @Test
+    void testIsRestrictedStudentFaculty_DirectEvaluation() {
+        course.setInstructorName("Nidish Narayanaa Balaji");
+        pref.setFacultyName("Nidish Narayanaa Balaji");
+
+        // AE22B058 + Nidish -> restricted
+        assertTrue(allocationService.isRestrictedStudentFaculty("AE22B058", course, pref));
+        assertTrue(allocationService.isRestrictedStudentFaculty("ae22b058", course, pref));
+
+        // Other student + Nidish -> not restricted
+        assertFalse(allocationService.isRestrictedStudentFaculty("AE22B001", course, pref));
+
+        // AE22B058 + Other faculty -> not restricted
+        course.setInstructorName("Bharath Govindarajan");
+        pref.setFacultyName("Bharath Govindarajan");
+        assertFalse(allocationService.isRestrictedStudentFaculty("AE22B058", course, pref));
+    }
 }
