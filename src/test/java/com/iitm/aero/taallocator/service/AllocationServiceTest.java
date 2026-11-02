@@ -15,7 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import com.iitm.aero.taallocator.dto.AllocationPreviewDto;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -375,5 +377,31 @@ public class AllocationServiceTest {
         when(courseRepository.findById("AS2100")).thenReturn(Optional.of(course));
 
         assertThrows(IllegalArgumentException.class, () -> allocationService.unassignTa("AS2100", 3));
+    }
+
+    @Test
+    void testPreviewGroupAllocation_DoesNotMutateDb() {
+        course.setCourseNo("AS5570");
+        course.setPriority(1);
+        pref.setSelectCourse("AS5570");
+        pref.setTaPreference1("AE22B001: Student One");
+
+        when(courseRepository.findByGroupId(5.0)).thenReturn(Collections.singletonList(course));
+        when(preferenceRepository.findAll()).thenReturn(Collections.singletonList(pref));
+        when(studentRepository.findAll()).thenReturn(Arrays.asList(student1, student2));
+
+        List<AllocationPreviewDto> previews = allocationService.previewGroupAllocation(5.0);
+
+        assertNotNull(previews);
+        assertEquals(2, previews.size(), "Should have 2 slot previews for 1 course");
+        assertEquals("AS5570", previews.get(0).getCourseNo());
+        assertEquals("AE22B001", previews.get(0).getMatchedRollNo());
+        assertTrue(previews.get(0).getMatchScore() > 0);
+
+        // Crucial invariant: DB entities must NOT be mutated or saved during preview
+        assertNull(course.getTa1(), "Course TA1 must remain unassigned during preview");
+        assertTrue(student1.isAvailable(), "Student1 must remain available during preview");
+        verify(courseRepository, never()).save(any(Course.class));
+        verify(studentRepository, never()).save(any(Student.class));
     }
 }

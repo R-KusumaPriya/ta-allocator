@@ -1,5 +1,6 @@
 package com.iitm.aero.taallocator.service;
 
+import com.iitm.aero.taallocator.dto.AllocationPreviewDto;
 import com.iitm.aero.taallocator.model.Course;
 import com.iitm.aero.taallocator.model.Faculty;
 import com.iitm.aero.taallocator.model.PreferenceResponse;
@@ -371,6 +372,207 @@ public class AllocationService {
             extracted = taField.trim();
         }
         return extracted.equalsIgnoreCase(targetRollNo.trim());
+    }
+
+    /**
+     * Dry-run simulation of Hungarian allocation for a group without persisting changes to DB.
+     *
+     * @param groupId the group id to preview
+     * @return list of preview assignment DTOs
+     */
+    public List<AllocationPreviewDto> previewGroupAllocation(double groupId) {
+        List<Course> courses = courseRepository.findByGroupId(groupId);
+        List<AllocationPreviewDto> previewList = new ArrayList<>();
+        if (courses == null || courses.isEmpty()) {
+            return previewList;
+        }
+
+        List<Student> allStudents = studentRepository.findAll();
+        if (allStudents == null) {
+            allStudents = Collections.emptyList();
+        }
+
+        List<Student> availableStudents = allStudents.stream()
+            .filter(Student::isAvailable)
+            .toList();
+
+        Map<String, Integer> rollToAvailableIdx = new HashMap<>();
+        for (int j = 0; j < availableStudents.size(); j++) {
+            String roll = availableStudents.get(j).getRollNo();
+            if (roll != null) {
+                rollToAvailableIdx.put(roll.trim().toUpperCase(), j);
+            }
+        }
+
+        List<PreferenceResponse> allPrefs = preferenceRepository.findAll();
+        if (allPrefs == null) {
+            allPrefs = Collections.emptyList();
+        }
+
+        List<Course> coursesToProcess = new ArrayList<>();
+        Map<String, PreferenceResponse> coursePrefMap = new HashMap<>();
+
+        for (Course course : courses) {
+            String cNo = (course.getCourseNo() != null) ? course.getCourseNo().trim() : "";
+            List<PreferenceResponse> prefs = allPrefs.stream()
+                .filter(p -> p.getSelectCourse() != null && p.getSelectCourse().trim().equalsIgnoreCase(cNo))
+                .toList();
+
+            if (prefs.isEmpty()) {
+                continue;
+            }
+
+            PreferenceResponse pref = prefs.get(prefs.size() - 1);
+            if (pref.getTaPreference1() != null && pref.getTaPreference1().toLowerCase().contains("do not want tas")) {
+                continue;
+            }
+
+            coursePrefMap.put(cNo, pref);
+            coursesToProcess.add(course);
+        }
+
+        if (coursesToProcess.isEmpty()) {
+            return previewList;
+        }
+
+        coursesToProcess.sort(Comparator.comparingInt(Course::getPriority));
+
+        List<CourseSlot> slots = new ArrayList<>();
+        for (Course course : coursesToProcess) {
+            slots.add(new CourseSlot(course, 1));
+            slots.add(new CourseSlot(course, 2));
+        }
+
+        int nSlots = slots.size();
+        int nStudents = availableStudents.size();
+
+        if (nStudents == 0) {
+            for (CourseSlot slot : slots) {
+                previewList.add(new AllocationPreviewDto(
+                    slot.course.getCourseNo(),
+                    slot.course.getCourseName(),
+                    slot.course.getInstructorName(),
+                    slot.slotNumber,
+                    "Unassigned",
+                    "-",
+                    "No Available Students",
+                    0.0
+                ));
+            }
+            return previewList;
+        }
+
+        double[][] weights = new double[nSlots][nStudents];
+        Map<String, String> slotStudentRankMap = new HashMap<>();
+
+        for (int i = 0; i < nSlots; i++) {
+            CourseSlot slot = slots.get(i);
+            Course course = slot.course;
+            String cNo = course.getCourseNo().trim();
+            PreferenceResponse pref = coursePrefMap.get(cNo);
+
+            double priorityBonus = Math.max(0, 100 - course.getPriority()) * 10.0;
+            String[] taPrefs = {
+                pref.getTaPreference1(),
+                pref.getTaPreference2(),
+                pref.getTaPreference3(),
+                pref.getTaPreference4()
+            };
+
+            boolean isAllNoPreference = true;
+            for (String pStr : taPrefs) {
+                if (pStr != null && !pStr.trim().isEmpty() && !pStr.toLowerCase().contains("no preference")) {
+                    isAllNoPreference = false;
+                    break;
+                }
+            }
+
+            if (isAllNoPreference && taPrefs[0] != null && taPrefs[0].toLowerCase().contains("no preference")) {
+                for (int j = 0; j < nStudents; j++) {
+                    Student s = availableStudents.get(j);
+                    boolean isRestricted = isRestrictedStudentFaculty(s.getRollNo(), course, pref);
+                    if (isRestricted) {
+                        weights[i][j] = 0.0;
+                    } else {
+                        double cgpa = parseCgpa(s.getCgpa());
+                        weights[i][j] = 1000.0 + (cgpa * 20.0) + priorityBonus;
+                        slotStudentRankMap.put(i + "-" + j, "No Preference (Auto)");
+                    }
+                }
+            } else {
+                double[] choiceScores = { 10000.0, 7500.0, 5000.0, 2500.0 };
+                String[] choiceLabels = { "Choice 1", "Choice 2", "Choice 3", "Choice 4" };
+
+                for (int rank = 0; rank < taPrefs.length; rank++) {
+                    String pStr = taPrefs[rank];
+                    if (pStr == null || pStr.trim().isEmpty() || pStr.toLowerCase().contains("no preference")) {
+                        continue;
+                    }
+                    String rollNo = extractRollNo(pStr);
+                    if (rollNo != null && rollToAvailableIdx.containsKey(rollNo)) {
+                        int sIdx = rollToAvailableIdx.get(rollNo);
+                        boolean isRestricted = isRestrictedStudentFaculty(rollNo, course, pref);
+                        if (isRestricted) {
+                            weights[i][sIdx] = 0.0;
+                        } else {
+                            weights[i][sIdx] = choiceScores[rank] + priorityBonus;
+                            slotStudentRankMap.put(i + "-" + sIdx, choiceLabels[rank]);
+                        }
+                    }
+                }
+            }
+        }
+
+        int[] matching = HungarianAlgorithm.findMaxWeightMatching(weights);
+        Set<String> assignedInRun = new HashSet<>();
+
+        for (int i = 0; i < nSlots; i++) {
+            CourseSlot slot = slots.get(i);
+            Course course = slot.course;
+            int sIdx = matching[i];
+
+            if (sIdx >= 0 && sIdx < nStudents && weights[i][sIdx] > 0) {
+                Student student = availableStudents.get(sIdx);
+                boolean isRestricted = isRestrictedStudentFaculty(student.getRollNo(), course, coursePrefMap.get(course.getCourseNo().trim()));
+                if (isRestricted || assignedInRun.contains(student.getRollNo())) {
+                    previewList.add(new AllocationPreviewDto(
+                        course.getCourseNo(),
+                        course.getCourseName(),
+                        course.getInstructorName(),
+                        slot.slotNumber,
+                        "Unassigned",
+                        "-",
+                        "Conflict / Restricted",
+                        0.0
+                    ));
+                } else {
+                    assignedInRun.add(student.getRollNo());
+                    String rankLabel = slotStudentRankMap.getOrDefault(i + "-" + sIdx, "Ranked Match");
+                    previewList.add(new AllocationPreviewDto(
+                        course.getCourseNo(),
+                        course.getCourseName(),
+                        course.getInstructorName(),
+                        slot.slotNumber,
+                        student.getRollNo(),
+                        student.getName(),
+                        rankLabel,
+                        weights[i][sIdx]
+                    ));
+                }
+            } else {
+                previewList.add(new AllocationPreviewDto(
+                    course.getCourseNo(),
+                    course.getCourseName(),
+                    course.getInstructorName(),
+                    slot.slotNumber,
+                    "Unassigned",
+                    "-",
+                    "Unmatched Slot",
+                    0.0
+                ));
+            }
+        }
+        return previewList;
     }
 
     private double parseCgpa(String cgpaStr) {

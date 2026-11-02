@@ -487,12 +487,17 @@
                     <h3 class="step-title">Execute Allocation</h3>
                     <p class="step-desc">Matches professor choices, checks availability locks, and caps assignment at max 2 TAs.</p>
                 </div>
-                <form method="POST" th:action="@{/group/allocate}">
-                    <input type="hidden" name="id" th:value="${groupId}" />
-                    <button type="submit" class="btn btn-success" style="font-size: 0.95rem; padding: 12px;">
-                        <span>⚡</span> Run Allocation Algorithm
-                    </button>
-                </form>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <a th:href="@{/group/preview(id=${groupId})}" class="btn" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:600; text-align:center; text-decoration:none; padding:10px;">
+                        <span>🔍</span> Preview Matches (Dry Run)
+                    </a>
+                    <form method="POST" th:action="@{/group/allocate}">
+                        <input type="hidden" name="id" th:value="${groupId}" />
+                        <button type="submit" class="btn btn-success" style="width:100%; font-size: 0.95rem; padding: 12px;">
+                            <span>⚡</span> Run Allocation Algorithm
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- Step 5: Dispatch Confirmation Emails -->
@@ -512,6 +517,60 @@
                 </form>
             </div>
         </div>
+
+        <!-- Simulated Allocation Preview Card (Feature 6) -->
+        <section class="table-card" th:if="${previewResults != null}" style="border: 2px solid #38bdf8; margin-bottom: 24px;">
+            <div class="table-header" style="background:#f0f9ff;">
+                <div class="table-title-group">
+                    <h2 style="color:#0369a1;">🔍 Simulated Allocation Preview (Dry Run)</h2>
+                    <p style="color:#0284c7;">Review projected Kuhn-Munkres optimal matches. Database state is currently unchanged.</p>
+                </div>
+                <div class="table-actions">
+                    <form method="POST" th:action="@{/group/allocate}" style="display:inline;">
+                        <input type="hidden" name="id" th:value="${groupId}" />
+                        <button type="submit" class="btn btn-success" style="padding:10px 18px; font-weight:700;">
+                            ✓ Confirm &amp; Commit Allocation
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Instructor</th>
+                            <th>Slot</th>
+                            <th>Matched TA</th>
+                            <th>Preference Rank</th>
+                            <th>Match Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${previewResults}">
+                            <td><span class="course-code-badge" th:text="${p.courseNo}">AS2100</span></td>
+                            <td th:text="${p.instructorName}">Instructor</td>
+                            <td th:text="'TA ' + ${p.slotNumber}">TA 1</td>
+                            <td>
+                                <span th:if="${p.matchedRollNo != 'Unassigned'}" class="ta-pill-assigned">
+                                    <span class="ta-dot"></span>
+                                    <span th:text="${p.matchedRollNo + ' (' + p.matchedStudentName + ')'}">AE22B001</span>
+                                </span>
+                                <span th:unless="${p.matchedRollNo != 'Unassigned'}" class="ta-pill-none">
+                                    Unassigned
+                                </span>
+                            </td>
+                            <td>
+                                <span style="font-weight:600; font-size:0.85rem;" 
+                                      th:style="${p.preferenceRank.contains('Choice 1') ? 'color:#16a34a;' : (p.preferenceRank.contains('Choice 2') ? 'color:#2563eb;' : 'color:#4b5563;')}"
+                                      th:text="${p.preferenceRank}">Choice 1</span>
+                            </td>
+                            <td th:text="${#numbers.formatDecimal(p.matchScore, 1, 1)}">10000.0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
         <!-- Courses in Group Table -->
         <section class="table-card">

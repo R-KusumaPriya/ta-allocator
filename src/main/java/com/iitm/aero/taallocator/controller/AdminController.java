@@ -1,5 +1,6 @@
 package com.iitm.aero.taallocator.controller;
 
+import com.iitm.aero.taallocator.dto.AllocationPreviewDto;
 import com.iitm.aero.taallocator.model.Course;
 import com.iitm.aero.taallocator.repository.CourseRepository;
 import com.iitm.aero.taallocator.repository.StudentRepository;
@@ -128,6 +129,16 @@ public class AdminController {
         List<Course> courses = courseRepository.findByGroupId(groupId);
         model.addAttribute("groupId", groupId);
         model.addAttribute("courses", courses);
+        return "group-manager";
+    }
+
+    @GetMapping("/group/preview")
+    public String previewAllocation(@RequestParam("id") double groupId, Model model) {
+        List<Course> courses = courseRepository.findByGroupId(groupId);
+        List<AllocationPreviewDto> previewResults = allocationService.previewGroupAllocation(groupId);
+        model.addAttribute("groupId", groupId);
+        model.addAttribute("courses", courses);
+        model.addAttribute("previewResults", previewResults);
         return "group-manager";
     }
 
