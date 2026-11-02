@@ -180,7 +180,9 @@ public class AdminController {
                                        @RequestParam(value = "customNote", required = false) String customNote,
                                        RedirectAttributes redirectAttributes) {
         try {
-            String result = emailService.sendPreferenceEmails(groupId, term, deadline, formLink, customNote);
+            String result = (customNote != null && !customNote.trim().isEmpty())
+                    ? emailService.sendPreferenceEmails(groupId, term, deadline, formLink, customNote)
+                    : emailService.sendPreferenceEmails(groupId, term, deadline, formLink);
             redirectAttributes.addFlashAttribute("message", result);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error sending preference emails: " + e.getMessage());
@@ -230,7 +232,9 @@ public class AdminController {
                                          @RequestParam(value = "customInstructions", required = false) String customInstructions,
                                          RedirectAttributes redirectAttributes) {
         try {
-            String result = emailService.sendConfirmationEmails(groupId, term, customInstructions);
+            String result = (customInstructions != null && !customInstructions.trim().isEmpty())
+                    ? emailService.sendConfirmationEmails(groupId, term, customInstructions)
+                    : emailService.sendConfirmationEmails(groupId, term);
             redirectAttributes.addFlashAttribute("message", result);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error sending confirmation emails: " + e.getMessage());
