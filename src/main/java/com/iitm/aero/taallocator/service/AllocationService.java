@@ -297,6 +297,82 @@ public class AllocationService {
         return isRestricted;
     }
 
+    /**
+     * Unassigns a TA from a specific course slot and safely restores the student's availability flag.
+     *
+     * @param courseNo the course number (ID) of the course
+     * @param slotNumber 1 for ta1, 2 for ta2
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void unassignTa(String courseNo, int slotNumber) {
+        if (courseNo == null || courseNo.trim().isEmpty()) {
+            throw new IllegalArgumentException("Course number cannot be null or empty");
+        }
+        Course course = courseRepository.findById(courseNo.trim())
+                .orElseThrow(() -> new IllegalArgumentException("Course not found with Course No: " + courseNo));
+
+        String removedTa = null;
+        if (slotNumber == 1) {
+            removedTa = course.getTa1();
+            course.setTa1(null);
+        } else if (slotNumber == 2) {
+            removedTa = course.getTa2();
+            course.setTa2(null);
+        } else {
+            throw new IllegalArgumentException("Invalid slot number: " + slotNumber + ". Must be 1 or 2.");
+        }
+        courseRepository.save(course);
+
+        if (removedTa != null && !removedTa.trim().isEmpty() && !removedTa.equalsIgnoreCase("xxxx")) {
+            String rollNo = extractRollNo(removedTa);
+            if (rollNo == null || rollNo.trim().isEmpty()) {
+                rollNo = removedTa.trim();
+            }
+            // Check if this student is still assigned to ANY other course
+            boolean stillAssigned = false;
+            List<Course> allCourses = courseRepository.findAll();
+            for (Course c : allCourses) {
+                if (c.getTa1() != null && isSameStudent(c.getTa1(), rollNo)) {
+                    stillAssigned = true;
+                    break;
+                }
+                if (c.getTa2() != null && isSameStudent(c.getTa2(), rollNo)) {
+                    stillAssigned = true;
+                    break;
+                }
+            }
+            if (!stillAssigned) {
+                Student s = findStudentByRollNo(rollNo);
+                if (s != null) {
+                    s.setAvailable(true);
+                    s.setCourse(null);
+                    studentRepository.save(s);
+                }
+            }
+        }
+    }
+
+    private Student findStudentByRollNo(String rollNo) {
+        if (rollNo == null || rollNo.trim().isEmpty()) return null;
+        Optional<Student> sOpt = studentRepository.findById(rollNo.trim());
+        if (sOpt.isPresent()) return sOpt.get();
+        for (Student cand : studentRepository.findAll()) {
+            if (cand.getRollNo() != null && cand.getRollNo().equalsIgnoreCase(rollNo.trim())) {
+                return cand;
+            }
+        }
+        return null;
+    }
+
+    private boolean isSameStudent(String taField, String targetRollNo) {
+        if (taField == null || targetRollNo == null) return false;
+        String extracted = extractRollNo(taField);
+        if (extracted == null || extracted.isEmpty()) {
+            extracted = taField.trim();
+        }
+        return extracted.equalsIgnoreCase(targetRollNo.trim());
+    }
+
     private double parseCgpa(String cgpaStr) {
         if (cgpaStr == null || cgpaStr.trim().isEmpty()) {
             return 7.0;

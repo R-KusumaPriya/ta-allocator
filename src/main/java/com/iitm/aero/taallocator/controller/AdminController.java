@@ -170,6 +170,20 @@ public class AdminController {
         return "redirect:/group?id=" + groupId;
     }
 
+    @PostMapping("/group/unassign")
+    public String unassignTa(@RequestParam("id") double groupId,
+                             @RequestParam("courseNo") String courseNo,
+                             @RequestParam("slot") int slot,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            allocationService.unassignTa(courseNo, slot);
+            redirectAttributes.addFlashAttribute("message", "TA in slot " + slot + " successfully unassigned for course " + courseNo + ".");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error unassigning TA: " + e.getMessage());
+        }
+        return "redirect:/group?id=" + groupId;
+    }
+
     @PostMapping("/group/send-confirmation-emails")
     public String sendConfirmationEmails(@RequestParam("id") double groupId,
                                          @RequestParam("term") String term,

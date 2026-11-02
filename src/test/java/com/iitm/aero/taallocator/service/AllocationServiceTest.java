@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -346,5 +347,33 @@ public class AllocationServiceTest {
         course.setInstructorName("Bharath Govindarajan");
         pref.setFacultyName("Bharath Govindarajan");
         assertFalse(allocationService.isRestrictedStudentFaculty("AE22B058", course, pref));
+    }
+
+    @Test
+    void testUnassignTa_Slot1_FreesStudentAndClearsCourse() {
+        course.setCourseNo("AS2100");
+        course.setTa1("AE22B001: Student One");
+        student1.setAvailable(false);
+        student1.setCourse(course.getCourseNo());
+
+        when(courseRepository.findById("AS2100")).thenReturn(Optional.of(course));
+        when(courseRepository.findAll()).thenReturn(Collections.singletonList(course));
+        when(studentRepository.findById("AE22B001")).thenReturn(Optional.of(student1));
+
+        allocationService.unassignTa("AS2100", 1);
+
+        assertNull(course.getTa1());
+        assertTrue(student1.isAvailable());
+        assertNull(student1.getCourse());
+        verify(courseRepository).save(course);
+        verify(studentRepository).save(student1);
+    }
+
+    @Test
+    void testUnassignTa_InvalidSlot_ThrowsException() {
+        course.setCourseNo("AS2100");
+        when(courseRepository.findById("AS2100")).thenReturn(Optional.of(course));
+
+        assertThrows(IllegalArgumentException.class, () -> allocationService.unassignTa("AS2100", 3));
     }
 }
