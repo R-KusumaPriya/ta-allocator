@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface PreferenceRepository extends JpaRepository<PreferenceResponse, Long> {
     List<PreferenceResponse> findBySelectCourse(String courseNo);
+    List<PreferenceResponse> findBySelectCourseIgnoreCase(String courseNo);
 }
