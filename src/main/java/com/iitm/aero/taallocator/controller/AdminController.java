@@ -129,6 +129,7 @@ public class AdminController {
         List<Course> courses = courseRepository.findByGroupId(groupId);
         model.addAttribute("groupId", groupId);
         model.addAttribute("courses", courses);
+        model.addAttribute("availableStudents", studentRepository.findByIsAvailableTrue());
         return "group-manager";
     }
 
@@ -139,7 +140,23 @@ public class AdminController {
         model.addAttribute("groupId", groupId);
         model.addAttribute("courses", courses);
         model.addAttribute("previewResults", previewResults);
+        model.addAttribute("availableStudents", studentRepository.findByIsAvailableTrue());
         return "group-manager";
+    }
+
+    @PostMapping("/group/override-ta")
+    public String overrideTa(@RequestParam("id") double groupId,
+                             @RequestParam("courseNo") String courseNo,
+                             @RequestParam("slot") int slot,
+                             @RequestParam("newRollNo") String newRollNo,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            allocationService.overrideAssignment(courseNo, slot, newRollNo);
+            redirectAttributes.addFlashAttribute("message", "TA assignment updated successfully for " + courseNo + " (Slot " + slot + ").");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error overriding TA: " + e.getMessage());
+        }
+        return "redirect:/group?id=" + groupId;
     }
 
     @PostMapping("/group/update-form")

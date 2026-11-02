@@ -404,4 +404,37 @@ public class AllocationServiceTest {
         verify(courseRepository, never()).save(any(Course.class));
         verify(studentRepository, never()).save(any(Student.class));
     }
+
+    @Test
+    void testOverrideAssignment_ReplacesStudentAndTogglesAvailability() {
+        course.setCourseNo("AS5570");
+        course.setTa1("AE22B001: Student One");
+        student1.setAvailable(false);
+        student1.setCourse("AS5570");
+
+        student2.setRollNo("AE22B002");
+        student2.setName("Student Two");
+        student2.setAvailable(true);
+
+        when(courseRepository.findById("AS5570")).thenReturn(Optional.of(course));
+        when(courseRepository.findAll()).thenReturn(Collections.singletonList(course));
+        when(studentRepository.findById("AE22B001")).thenReturn(Optional.of(student1));
+        when(studentRepository.findById("AE22B002")).thenReturn(Optional.of(student2));
+
+        allocationService.overrideAssignment("AS5570", 1, "AE22B002");
+
+        // Old student released
+        assertTrue(student1.isAvailable());
+        assertNull(student1.getCourse());
+
+        // New student locked
+        assertFalse(student2.isAvailable());
+        assertEquals("AS5570", student2.getCourse());
+
+        // Course slot updated
+        assertTrue(course.getTa1().contains("AE22B002"));
+        verify(courseRepository).save(course);
+        verify(studentRepository).save(student1);
+        verify(studentRepository).save(student2);
+    }
 }

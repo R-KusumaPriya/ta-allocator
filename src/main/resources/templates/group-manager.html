@@ -603,40 +603,74 @@
                             <td th:text="${course.courseName}" style="font-weight: 500;">Course Title</td>
                             <td th:text="${course.instructorName}">Instructor Name</td>
                             <td>
-                                <span th:if="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}" 
-                                      class="ta-pill-assigned">
-                                    <span class="ta-dot"></span>
-                                    <span th:text="${course.ta1}">AE22B001</span>
-                                    <form method="POST" th:action="@{/group/unassign}" style="display:inline; margin-left:6px;"
-                                          onsubmit="return confirm('Unassign this TA from Slot 1?');">
+                                <div>
+                                    <span th:if="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}" 
+                                          class="ta-pill-assigned">
+                                        <span class="ta-dot"></span>
+                                        <span th:text="${course.ta1}">AE22B001</span>
+                                        <form method="POST" th:action="@{/group/unassign}" style="display:inline; margin-left:4px;"
+                                              onsubmit="return confirm('Unassign this TA from Slot 1?');">
+                                            <input type="hidden" name="id" th:value="${groupId}" />
+                                            <input type="hidden" name="courseNo" th:value="${course.courseNo}" />
+                                            <input type="hidden" name="slot" value="1" />
+                                            <button type="submit" style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; border-radius:4px; font-size:0.7rem; padding:1px 4px; cursor:pointer;" title="Unassign">✕</button>
+                                        </form>
+                                    </span>
+                                    <span th:unless="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}" 
+                                          class="ta-pill-none">
+                                        Unassigned
+                                    </span>
+                                </div>
+                                <details style="margin-top:4px;">
+                                    <summary style="cursor:pointer; font-size:0.75rem; color:#4f46e5;" title="Override Slot 1">✎ Assign / Override</summary>
+                                    <form method="POST" th:action="@{/group/override-ta}" style="display:inline-flex; gap:3px; margin-top:3px;">
                                         <input type="hidden" name="id" th:value="${groupId}" />
                                         <input type="hidden" name="courseNo" th:value="${course.courseNo}" />
                                         <input type="hidden" name="slot" value="1" />
-                                        <button type="submit" style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; border-radius:4px; font-size:0.7rem; padding:1px 5px; cursor:pointer;" title="Unassign TA 1">✕</button>
+                                        <select name="newRollNo" style="font-size:0.72rem; padding:1px 4px; border-radius:4px; border:1px solid #cbd5e1; max-width:140px;">
+                                            <option value="NONE">-- Clear Slot --</option>
+                                            <option th:each="st : ${availableStudents}" 
+                                                    th:value="${st.rollNo}" 
+                                                    th:text="${st.rollNo + ': ' + st.name}"></option>
+                                        </select>
+                                        <button type="submit" style="background:#4f46e5; color:#fff; border:none; border-radius:4px; font-size:0.72rem; padding:1px 5px; cursor:pointer;">Set</button>
                                     </form>
-                                </span>
-                                <span th:unless="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}" 
-                                      class="ta-pill-none">
-                                    Unassigned
-                                </span>
+                                </details>
                             </td>
                             <td>
-                                <span th:if="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}" 
-                                      class="ta-pill-assigned">
-                                    <span class="ta-dot"></span>
-                                    <span th:text="${course.ta2}">AE22B002</span>
-                                    <form method="POST" th:action="@{/group/unassign}" style="display:inline; margin-left:6px;"
-                                          onsubmit="return confirm('Unassign this TA from Slot 2?');">
+                                <div>
+                                    <span th:if="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}" 
+                                          class="ta-pill-assigned">
+                                        <span class="ta-dot"></span>
+                                        <span th:text="${course.ta2}">AE22B002</span>
+                                        <form method="POST" th:action="@{/group/unassign}" style="display:inline; margin-left:4px;"
+                                              onsubmit="return confirm('Unassign this TA from Slot 2?');">
+                                            <input type="hidden" name="id" th:value="${groupId}" />
+                                            <input type="hidden" name="courseNo" th:value="${course.courseNo}" />
+                                            <input type="hidden" name="slot" value="2" />
+                                            <button type="submit" style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; border-radius:4px; font-size:0.7rem; padding:1px 4px; cursor:pointer;" title="Unassign">✕</button>
+                                        </form>
+                                    </span>
+                                    <span th:unless="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}" 
+                                          class="ta-pill-none">
+                                        Unassigned
+                                    </span>
+                                </div>
+                                <details style="margin-top:4px;">
+                                    <summary style="cursor:pointer; font-size:0.75rem; color:#4f46e5;" title="Override Slot 2">✎ Assign / Override</summary>
+                                    <form method="POST" th:action="@{/group/override-ta}" style="display:inline-flex; gap:3px; margin-top:3px;">
                                         <input type="hidden" name="id" th:value="${groupId}" />
                                         <input type="hidden" name="courseNo" th:value="${course.courseNo}" />
                                         <input type="hidden" name="slot" value="2" />
-                                        <button type="submit" style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; border-radius:4px; font-size:0.7rem; padding:1px 5px; cursor:pointer;" title="Unassign TA 2">✕</button>
+                                        <select name="newRollNo" style="font-size:0.72rem; padding:1px 4px; border-radius:4px; border:1px solid #cbd5e1; max-width:140px;">
+                                            <option value="NONE">-- Clear Slot --</option>
+                                            <option th:each="st : ${availableStudents}" 
+                                                    th:value="${st.rollNo}" 
+                                                    th:text="${st.rollNo + ': ' + st.name}"></option>
+                                        </select>
+                                        <button type="submit" style="background:#4f46e5; color:#fff; border:none; border-radius:4px; font-size:0.72rem; padding:1px 5px; cursor:pointer;">Set</button>
                                     </form>
-                                </span>
-                                <span th:unless="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}" 
-                                      class="ta-pill-none">
-                                    Unassigned
-                                </span>
+                                </details>
                             </td>
                         </tr>
                     </tbody>

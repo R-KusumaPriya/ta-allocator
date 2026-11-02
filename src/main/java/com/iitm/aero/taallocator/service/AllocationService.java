@@ -375,6 +375,86 @@ public class AllocationService {
     }
 
     /**
+     * Manually overrides/assigns a TA to a specific course slot.
+     * If a student was previously assigned to this slot, their availability is restored.
+     * If newStudentRollNo is provided, that student is locked (isAvailable=false) and assigned.
+     *
+     * @param courseNo the course number
+     * @param slotNumber 1 for ta1, 2 for ta2
+     * @param newStudentRollNo the roll number of the new student (or "NONE" to clear)
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void overrideAssignment(String courseNo, int slotNumber, String newStudentRollNo) {
+        if (courseNo == null || courseNo.trim().isEmpty()) {
+            throw new IllegalArgumentException("Course number cannot be null or empty");
+        }
+        Course course = courseRepository.findById(courseNo.trim())
+                .orElseThrow(() -> new IllegalArgumentException("Course not found with Course No: " + courseNo));
+
+        String oldTa = (slotNumber == 1) ? course.getTa1() : (slotNumber == 2 ? course.getTa2() : null);
+        if (slotNumber != 1 && slotNumber != 2) {
+            throw new IllegalArgumentException("Invalid slot number: " + slotNumber + ". Must be 1 or 2.");
+        }
+
+        // 1. If an old student was in this slot, check if we need to restore their availability
+        if (oldTa != null && !oldTa.trim().isEmpty() && !oldTa.equalsIgnoreCase("xxxx")) {
+            String oldRollNo = extractRollNo(oldTa);
+            if (oldRollNo == null || oldRollNo.trim().isEmpty()) {
+                oldRollNo = oldTa.trim();
+            }
+            boolean stillAssigned = false;
+            for (Course c : courseRepository.findAll()) {
+                if (c.getCourseNo().equalsIgnoreCase(course.getCourseNo())) {
+                    String otherSlot = (slotNumber == 1) ? c.getTa2() : c.getTa1();
+                    if (otherSlot != null && isSameStudent(otherSlot, oldRollNo)) {
+                        stillAssigned = true;
+                        break;
+                    }
+                } else {
+                    if (c.getTa1() != null && isSameStudent(c.getTa1(), oldRollNo)) {
+                        stillAssigned = true;
+                        break;
+                    }
+                    if (c.getTa2() != null && isSameStudent(c.getTa2(), oldRollNo)) {
+                        stillAssigned = true;
+                        break;
+                    }
+                }
+            }
+            if (!stillAssigned) {
+                Student oldStudent = findStudentByRollNo(oldRollNo);
+                if (oldStudent != null) {
+                    oldStudent.setAvailable(true);
+                    oldStudent.setCourse(null);
+                    studentRepository.save(oldStudent);
+                }
+            }
+        }
+
+        // 2. Assign new student or clear
+        if (newStudentRollNo == null || newStudentRollNo.trim().isEmpty() || newStudentRollNo.equalsIgnoreCase("NONE")) {
+            if (slotNumber == 1) course.setTa1(null);
+            else course.setTa2(null);
+        } else {
+            Student newStudent = findStudentByRollNo(newStudentRollNo.trim());
+            if (newStudent != null) {
+                newStudent.setAvailable(false);
+                newStudent.setCourse(course.getCourseNo());
+                studentRepository.save(newStudent);
+                String formatted = newStudent.getRollNo() + ": " + newStudent.getName() + 
+                    (newStudent.getCgpa() != null ? " [" + newStudent.getCgpa() + "]" : "") + 
+                    (newStudent.getProgram() != null ? " (" + newStudent.getProgram() + ")" : "");
+                if (slotNumber == 1) course.setTa1(formatted);
+                else course.setTa2(formatted);
+            } else {
+                if (slotNumber == 1) course.setTa1(newStudentRollNo.trim());
+                else course.setTa2(newStudentRollNo.trim());
+            }
+        }
+        courseRepository.save(course);
+    }
+
+    /**
      * Dry-run simulation of Hungarian allocation for a group without persisting changes to DB.
      *
      * @param groupId the group id to preview
