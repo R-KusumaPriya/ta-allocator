@@ -30,6 +30,10 @@ public class EmailService {
     private StudentRepository studentRepository;
 
     public String sendPreferenceEmails(double groupId, String termString, String deadline, String formLink) {
+        return sendPreferenceEmails(groupId, termString, deadline, formLink, null);
+    }
+
+    public String sendPreferenceEmails(double groupId, String termString, String deadline, String formLink, String customNote) {
         List<Course> courses = courseRepository.findByGroupId(groupId);
         if (courses.isEmpty()) {
             return "No courses found for Group ID: " + groupId;
@@ -55,6 +59,7 @@ public class EmailService {
                     formLink + " \n\n" +
                     "While it will be convenient to have this done ASAP, I will wait till " +
                     deadline + " before I allot the TA and proceed.\n\n" +
+                    (customNote != null && !customNote.trim().isEmpty() ? "Note from Coordinator:\n" + customNote.trim() + "\n\n" : "") +
                     "Best,\nNidish Narayanaa Balaji\nAssistant Professor,\n" +
                     "Department of Aerospace Engineering,\nIIT Madras, Chennai 600036, IN";
             
@@ -70,6 +75,10 @@ public class EmailService {
     }
 
     public String sendConfirmationEmails(double groupId, String termString) {
+        return sendConfirmationEmails(groupId, termString, null);
+    }
+
+    public String sendConfirmationEmails(double groupId, String termString, String customInstructions) {
         List<Course> courses = courseRepository.findByGroupId(groupId);
         if (courses.isEmpty()) {
             return "No courses found for Group ID: " + groupId;
@@ -110,6 +119,7 @@ public class EmailService {
                     "\nPlease disregard any previous emails you may have received in this regard.\n" +
                     "Dear TAs, please make it a point to reach out to the course professor and " +
                     "schedule a kickoff meeting within the next two working days.\n\n" +
+                    (customInstructions != null && !customInstructions.trim().isEmpty() ? "Special Instructions:\n" + customInstructions.trim() + "\n\n" : "") +
                     "Best,\nNidish Narayanaa Balaji\nAssistant Professor,\n" +
                     "Department of Aerospace Engineering,\nIIT Madras, Chennai 600036, IN";
             

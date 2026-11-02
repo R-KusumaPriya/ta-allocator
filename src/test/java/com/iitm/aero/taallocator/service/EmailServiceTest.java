@@ -216,4 +216,32 @@ public class EmailServiceTest {
         assertTrue(result.contains("No TAs assigned yet"));
         verify(mailSender, never()).send(any(SimpleMailMessage.class));
     }
+
+    @Test
+    void testSendPreferenceEmails_WithCustomNote() {
+        when(courseRepository.findByGroupId(1.0)).thenReturn(Collections.singletonList(course));
+        when(facultyRepository.findByNameIgnoreCase("Dr. Bharath G")).thenReturn(faculty);
+
+        String result = emailService.sendPreferenceEmails(1.0, "Jul-Nov 2026", "Aug 10", "https://forms.gle/xyz", "Urgent deadline please respond.");
+
+        assertTrue(result.contains("1/1 sent"));
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+        assertTrue(captor.getValue().getText().contains("Urgent deadline please respond."));
+    }
+
+    @Test
+    void testSendConfirmationEmails_WithCustomInstructions() {
+        course.setTa1("AE22B001");
+        when(courseRepository.findByGroupId(1.0)).thenReturn(Collections.singletonList(course));
+        when(facultyRepository.findByNameIgnoreCase("Dr. Bharath G")).thenReturn(faculty);
+        when(studentRepository.findById("AE22B001")).thenReturn(Optional.of(ta1));
+
+        String result = emailService.sendConfirmationEmails(1.0, "Jul-Nov 2026", "Strictly in-person meetings.");
+
+        assertTrue(result.contains("1 sent"));
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+        assertTrue(captor.getValue().getText().contains("Strictly in-person meetings."));
+    }
 }

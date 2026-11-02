@@ -177,9 +177,10 @@ public class AdminController {
                                        @RequestParam("term") String term,
                                        @RequestParam("deadline") String deadline,
                                        @RequestParam("formLink") String formLink,
+                                       @RequestParam(value = "customNote", required = false) String customNote,
                                        RedirectAttributes redirectAttributes) {
         try {
-            String result = emailService.sendPreferenceEmails(groupId, term, deadline, formLink);
+            String result = emailService.sendPreferenceEmails(groupId, term, deadline, formLink, customNote);
             redirectAttributes.addFlashAttribute("message", result);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error sending preference emails: " + e.getMessage());
@@ -226,9 +227,10 @@ public class AdminController {
     @PostMapping("/group/send-confirmation-emails")
     public String sendConfirmationEmails(@RequestParam("id") double groupId,
                                          @RequestParam("term") String term,
+                                         @RequestParam(value = "customInstructions", required = false) String customInstructions,
                                          RedirectAttributes redirectAttributes) {
         try {
-            String result = emailService.sendConfirmationEmails(groupId, term);
+            String result = emailService.sendConfirmationEmails(groupId, term, customInstructions);
             redirectAttributes.addFlashAttribute("message", result);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error sending confirmation emails: " + e.getMessage());
