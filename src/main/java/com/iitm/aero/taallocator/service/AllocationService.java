@@ -455,6 +455,65 @@ public class AllocationService {
     }
 
     /**
+     * Rolls back / undoes all TA allocations for courses in a specific group.
+     * Clears assignedTa1 and assignedTa2 for every course in this group,
+     * and safely restores the isAvailable=true flag for affected students (provided
+     * they are not allocated to any other active course).
+     *
+     * @param groupId the group id to rollback
+     * @return count of courses cleared
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public int rollbackGroupAllocations(double groupId) {
+        List<Course> groupCourses = courseRepository.findByGroupId(groupId);
+        if (groupCourses == null || groupCourses.isEmpty()) {
+            return 0;
+        }
+
+        Set<String> releasedRollNos = new HashSet<>();
+        for (Course course : groupCourses) {
+            if (course.getTa1() != null && !course.getTa1().trim().isEmpty() && !course.getTa1().equalsIgnoreCase("xxxx")) {
+                String r1 = extractRollNo(course.getTa1());
+                if (r1 != null && !r1.trim().isEmpty()) releasedRollNos.add(r1.trim());
+            }
+            if (course.getTa2() != null && !course.getTa2().trim().isEmpty() && !course.getTa2().equalsIgnoreCase("xxxx")) {
+                String r2 = extractRollNo(course.getTa2());
+                if (r2 != null && !r2.trim().isEmpty()) releasedRollNos.add(r2.trim());
+            }
+            course.setTa1(null);
+            course.setTa2(null);
+            courseRepository.save(course);
+        }
+
+        List<Course> otherCourses = courseRepository.findAll().stream()
+                .filter(c -> c.getGroupId() != groupId)
+                .toList();
+
+        for (String rollNo : releasedRollNos) {
+            boolean assignedElsewhere = false;
+            for (Course oc : otherCourses) {
+                if (oc.getTa1() != null && isSameStudent(oc.getTa1(), rollNo)) {
+                    assignedElsewhere = true;
+                    break;
+                }
+                if (oc.getTa2() != null && isSameStudent(oc.getTa2(), rollNo)) {
+                    assignedElsewhere = true;
+                    break;
+                }
+            }
+            if (!assignedElsewhere) {
+                Student s = findStudentByRollNo(rollNo);
+                if (s != null) {
+                    s.setAvailable(true);
+                    s.setCourse(null);
+                    studentRepository.save(s);
+                }
+            }
+        }
+        return groupCourses.size();
+    }
+
+    /**
      * Dry-run simulation of Hungarian allocation for a group without persisting changes to DB.
      *
      * @param groupId the group id to preview

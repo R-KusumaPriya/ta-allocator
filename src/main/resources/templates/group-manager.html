@@ -497,6 +497,12 @@
                             <span>⚡</span> Run Allocation Algorithm
                         </button>
                     </form>
+                    <form method="POST" th:action="@{/group/rollback}" onsubmit="return confirm('Undo all allocations for this group? All assigned students will be released back to the available pool.');">
+                        <input type="hidden" name="id" th:value="${groupId}" />
+                        <button type="submit" class="btn" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; width:100%; font-size:0.8rem; padding:8px; cursor:pointer;">
+                            <span>↩</span> Undo / Rollback Allocations
+                        </button>
+                    </form>
                 </div>
             </div>
 

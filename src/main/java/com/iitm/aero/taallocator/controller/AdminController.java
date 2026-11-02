@@ -198,6 +198,17 @@ public class AdminController {
         return "redirect:/group?id=" + groupId;
     }
 
+    @PostMapping("/group/rollback")
+    public String rollbackGroupAllocations(@RequestParam("id") double groupId, RedirectAttributes redirectAttributes) {
+        try {
+            int count = allocationService.rollbackGroupAllocations(groupId);
+            redirectAttributes.addFlashAttribute("message", "Allocations for Group " + groupId + " (" + count + " courses) successfully rolled back and students released.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error rolling back allocations: " + e.getMessage());
+        }
+        return "redirect:/group?id=" + groupId;
+    }
+
     @PostMapping("/group/unassign")
     public String unassignTa(@RequestParam("id") double groupId,
                              @RequestParam("courseNo") String courseNo,

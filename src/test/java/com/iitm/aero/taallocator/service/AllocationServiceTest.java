@@ -437,4 +437,38 @@ public class AllocationServiceTest {
         verify(studentRepository).save(student1);
         verify(studentRepository).save(student2);
     }
+
+    @Test
+    void testRollbackGroupAllocations_ClearsCoursesAndReleasesStudents() {
+        course.setCourseNo("AS5570");
+        course.setGroupId(5.0);
+        course.setTa1("AE22B001: Student One");
+        course.setTa2("AE22B002: Student Two");
+
+        student1.setRollNo("AE22B001");
+        student1.setAvailable(false);
+        student1.setCourse("AS5570");
+
+        student2.setRollNo("AE22B002");
+        student2.setAvailable(false);
+        student2.setCourse("AS5570");
+
+        when(courseRepository.findByGroupId(5.0)).thenReturn(Collections.singletonList(course));
+        when(courseRepository.findAll()).thenReturn(Collections.singletonList(course));
+        when(studentRepository.findById("AE22B001")).thenReturn(Optional.of(student1));
+        when(studentRepository.findById("AE22B002")).thenReturn(Optional.of(student2));
+
+        int rolledBack = allocationService.rollbackGroupAllocations(5.0);
+
+        assertEquals(1, rolledBack);
+        assertNull(course.getTa1());
+        assertNull(course.getTa2());
+        assertTrue(student1.isAvailable());
+        assertTrue(student2.isAvailable());
+        assertNull(student1.getCourse());
+        assertNull(student2.getCourse());
+        verify(courseRepository).save(course);
+        verify(studentRepository).save(student1);
+        verify(studentRepository).save(student2);
+    }
 }
