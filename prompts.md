@@ -361,3 +361,245 @@ GitHub Push Protection rejected my git push because it detected Google Cloud pri
 
 1. Rewrite .gitignore in UTF-8 to properly ignore credentials.json, src/main/resources/credentials.json, and *.class.
 2. Give me the exact Git commands to safely rewind my unpushed commit (git reset --soft origin/main), remove credentials.json from Git's cache without deleting it from my PC (git rm --cached), and commit safely.
+
+---
+
+## Phase 9: Operational Cockpit & Human-in-the-Loop Controls
+
+### Prompt 27: Student-Faculty Allocation Constraint (Hungarian Viva Modification)
+In AllocationService.java, we need to enforce a departmental constraint during Hungarian matching: certain students should not be allocated to specific professors (e.g., student AE22B058 must never be assigned to Prof. Nidish).
+
+1. Add a helper method isRestrictedStudentFaculty(String rollNo, Course course, PreferenceResponse pref) that returns true if rollNo is "AE22B058" (case-insensitive) and the instructor name contains "nidish".
+2. In the weight matrix formulation inside allocateGroup(), if isRestrictedStudentFaculty returns true for a student-course pair, zero out their weight (weights[i][j] = 0.0) so Kuhn-Munkres never matches them.
+3. Add a defensive post-matching guard during match assignment to skip the assignment if restricted.
+4. Add JUnit 5 tests in AllocationServiceTest verifying that AE22B058 is never assigned to Prof. Nidish under explicit preference or auto-allocation.
+
+---
+
+### Prompt 28: Interactive TA Unassignment and Availability Reset (Feature 2)
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target files:
+  * Service: src/main/java/com/iitm/aero/taallocator/service/AllocationService.java
+  * Controller: src/main/java/com/iitm/aero/taallocator/controller/AdminController.java
+  * Template: src/main/resources/templates/group-manager.html
+  * Tests: AllocationServiceTest.java
+- Currently, when TAs are allocated, Course.ta1 / ta2 are stored as strings (e.g., "AE22B001: John Doe"), and Student.isAvailable is toggled to false. To remove a TA, admins currently have to edit raw CSVs or SQL tables manually.
+
+2. TASK / NEW REQUIREMENT:
+- Implement interactive unassignment of a TA from the group manager UI:
+  1. In AllocationService.java, add a method:
+     @Transactional
+     public void unassignTa(String courseNo, int slotNumber)
+  2. In AdminController.java, add a POST endpoint:
+     @PostMapping("/group/unassign")
+     taking @RequestParam("id") double groupId, @RequestParam("courseNo") String courseNo, and @RequestParam("slot") int slot.
+  3. In group-manager.html, in the course allocation table, next to assigned TA 1 and TA 2, render a small red "✕" button that posts to this endpoint with a confirmation prompt.
+
+3. HARD CONSTRAINTS:
+- Pure Java 17 and Spring Boot 3 only. Do not add any new external libraries or Maven dependencies.
+- No Lombok; use existing standard getters and setters.
+- Maintain backward compatibility with all existing JUnit tests.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- Check that the course exists; throw IllegalArgumentException if not found.
+- If slotNumber is 1, clear course.ta1; if 2, clear course.ta2.
+- Extract the student's roll number from the assigned string.
+- Reset availability safely: check if this student roll number is assigned to any other course in the database. If not assigned anywhere else, find the Student entity and set isAvailable(true).
+- Annotate unassignTa with @Transactional to ensure atomic database commit.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide the Java code for AllocationService.java and AdminController.java, and the updated snippet for group-manager.html.
+- Provide a JUnit 5 test in AllocationServiceTest.java verifying that unassigning a TA clears the course slot and restores student availability.
+
+---
+
+### Prompt 29: Allocation Preview & Dry-Run Simulation Mode (Feature 6)
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target files:
+  * DTO (New): src/main/java/com/iitm/aero/taallocator/dto/AllocationPreviewDto.java
+  * Service: src/main/java/com/iitm/aero/taallocator/service/AllocationService.java
+  * Controller: src/main/java/com/iitm/aero/taallocator/controller/AdminController.java
+  * Template: src/main/resources/templates/group-manager.html
+  * Tests: AllocationServiceTest.java
+- Currently, clicking "Run Allocation" immediately commits matches to the database. Administrators want to preview what the Hungarian Algorithm proposes (along with scores and match ranks) before committing changes.
+
+2. TASK / NEW REQUIREMENT:
+- Implement an in-memory "Preview / Dry Run" feature:
+  1. Create a lightweight DTO: AllocationPreviewDto.java with fields:
+     courseNo, courseName, instructorName, slotNumber, matchedRollNo, matchedStudentName, preferenceRank (Choice 1/2/3/4/Unranked), matchScore. Explicit getters and setters.
+  2. In AllocationService.java, implement:
+     public List<AllocationPreviewDto> previewGroupAllocation(double groupId)
+     This builds the exact cost matrix and runs Kuhn-Munkres, but does NOT call courseRepository.save() or mutate student.isAvailable in the DB.
+  3. In AdminController.java, add:
+     @GetMapping("/group/preview")
+     which calls previewGroupAllocation(groupId), places "previewResults" into the Model, and re-renders group-manager.html.
+  4. In group-manager.html:
+     Render a "Simulated Allocation Preview" table showing the projected pairings with a "Confirm & Commit Allocation" button that triggers the actual persistent allocation.
+
+3. HARD CONSTRAINTS:
+- Database state (Course and Student tables) must remain completely unmodified when running preview mode.
+- Pure Java 17; no Lombok.
+- Handle unassigned slots or restricted candidates cleanly without throwing ArrayIndexOutOfBoundsException.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- Ensure the preview reads from the current snapshot of available students (isAvailable == true).
+- If no preferences exist or a slot cannot be filled, mark slot as "Unassigned" with score 0.0.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Output AllocationPreviewDto.java, previewGroupAllocation in AllocationService.java, the controller endpoint, and the HTML table in group-manager.html.
+- Provide a JUnit test asserting that previewGroupAllocation returns the expected matches while studentRepository.save() is never called and availability remains untouched.
+
+---
+
+### Prompt 30: Manual TA Assignment Override and Swap Capability (Feature 3)
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target files:
+  * Service: src/main/java/com/iitm/aero/taallocator/service/AllocationService.java
+  * Controller: src/main/java/com/iitm/aero/taallocator/controller/AdminController.java
+  * Template: src/main/resources/templates/group-manager.html
+  * Tests: AllocationServiceTest.java
+- Department admins need human-in-the-loop control to manually swap or reassign a TA to a course slot after reviewing automated Hungarian results.
+
+2. TASK / NEW REQUIREMENT:
+- Implement a manual TA override/assignment feature:
+  1. In AllocationService.java, implement:
+     @Transactional
+     public void overrideAssignment(String courseNo, int slotNumber, String newStudentRollNo)
+     Logic:
+     - If the target slot already had a student, restore their Student.isAvailable = true (if not assigned elsewhere).
+     - If newStudentRollNo is non-blank and not "NONE", retrieve new student, set isAvailable = false, and assign them formatted as "ROLLNO: Name [CGPA] (Program)" to course.ta1 or ta2.
+     - If newStudentRollNo is "NONE" or empty, clear the slot to null.
+  2. In AdminController.java:
+     - Pass studentRepository.findByIsAvailableTrue() as "availableStudents" to the Model in all group manager GET endpoints.
+     - Add endpoint @PostMapping("/group/override-ta") accepting id, courseNo, slot, and newRollNo.
+  3. In group-manager.html:
+     Add an inline expandable dropdown (<details>) next to each slot allowing selection of any available student to override the slot.
+
+3. HARD CONSTRAINTS:
+- Standard Spring Data JPA and Java 17 only.
+- Preserve transactional consistency with @Transactional.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- Prevent duplicate assignment conflicts.
+- Safely extract roll numbers and handle cases where a student was already assigned elsewhere.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide methods in AllocationService.java, AdminController.java, and group-manager.html.
+- Add a JUnit test in AllocationServiceTest verifying that overriding a slot frees the previous student and locks the new student.
+
+---
+
+### Prompt 31: Allocation Rollback / Undo Capability per Group (Feature 5)
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target files:
+  * Service: src/main/java/com/iitm/aero/taallocator/service/AllocationService.java
+  * Controller: src/main/java/com/iitm/aero/taallocator/controller/AdminController.java
+  * Template: src/main/resources/templates/group-manager.html
+  * Tests: AllocationServiceTest.java
+- Currently, running an allocation for a group commits course.ta1 and ta2 and flips student availability flags. There is no automated way to rollback this group's allocations if results need to be re-run.
+
+2. TASK / NEW REQUIREMENT:
+- Implement an Undo/Rollback feature for a specific group:
+  1. In AllocationService.java, add:
+     @Transactional
+     public int rollbackGroupAllocations(double groupId)
+     which clears all TA assignments made for courses belonging to that specific groupId and restores availability flags for the affected students.
+  2. In AdminController.java, add:
+     @PostMapping("/group/rollback")
+     which invokes rollbackGroupAllocations(groupId) and redirects to /group?id={groupId} with a flash message: "Allocations for Group X successfully rolled back and students released."
+  3. In group-manager.html, add a secondary button: "Undo / Rollback Allocations" with a confirmation dialog.
+
+3. HARD CONSTRAINTS:
+- Do not affect courses or students assigned in other groups (e.g., rolling back Group 1 must NOT touch Group 0 assignments).
+- Do not delete preference submissions or course records—only wipe ta1, ta2, and restore availability.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- Safely extract roll numbers from ta1 and ta2. Handle null or malformed strings without throwing exceptions.
+- Before marking a student isAvailable = true, verify that the student is not assigned to any other course outside this group.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide the service method, controller endpoint, and HTML button snippet.
+- Add a JUnit test in AllocationServiceTest.java verifying that rollbackGroupAllocations clears courses and sets students back to available.
+
+---
+
+### Prompt 32: Email Template Customization from Dashboard (Feature 8)
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target files:
+  * Service: src/main/java/com/iitm/aero/taallocator/service/EmailService.java
+  * Controller: src/main/java/com/iitm/aero/taallocator/controller/AdminController.java
+  * Template: src/main/resources/templates/group-manager.html
+  * Tests: EmailServiceTest.java
+- Currently, email subjects, deadline text, and body messages in EmailService.java are hardcoded strings. The coordinator needs to customize deadline dates and special instructions directly from the dashboard before dispatching emails.
+
+2. TASK / NEW REQUIREMENT:
+- Add customizable email parameters to the email dispatch workflow:
+  1. In EmailService.java, add overloaded methods:
+     public String sendPreferenceEmails(double groupId, String termString, String deadline, String formLink, String customNote)
+     public String sendConfirmationEmails(double groupId, String termString, String customInstructions)
+     Keep existing 4-arg and 2-arg versions intact as backward-compatible wrappers.
+     Dynamically inject customNote and customInstructions into the email bodies when non-empty.
+  2. In AdminController.java:
+     Update @PostMapping("/group/send-preference-emails") and @PostMapping("/group/send-confirmation-emails") to accept optional @RequestParam strings (customNote, customInstructions) with fallbacks.
+  3. In group-manager.html:
+     Add optional input fields for "Custom Note" in Step 2 and "Special Instructions" in Step 5.
+
+3. HARD CONSTRAINTS:
+- Do not break existing method calls; keep backward-compatible overloaded methods so existing tests continue passing.
+- Maintain existing whitespace normalization and faculty email resolution logic.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- If customNote or customInstructions are null or blank, omit the extra section cleanly.
+- Handle SMTP errors gracefully without crashing the web session.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide updated methods in EmailService.java, AdminController.java, and form inputs in group-manager.html.
+- Add JUnit tests in EmailServiceTest.java verifying that custom notes and instructions appear inside dispatched email messages.
+
+---
+
+### Prompt 33: Standalone In-App Faculty Preference Form (Feature 7)
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target files:
+  * Controller (New): src/main/java/com/iitm/aero/taallocator/controller/PreferenceFormController.java
+  * Repository: src/main/java/com/iitm/aero/taallocator/repository/PreferenceRepository.java
+  * Template (New): src/main/resources/templates/submit-preference.html
+  * Templates: dashboard.html, group-manager.html
+  * Tests (New): PreferenceFormControllerTest.java
+- Currently, faculty preferences are gathered through Google Forms and imported via CSV. We want an alternate, standalone internal portal where professors can select choices directly via web browser without depending on external Google APIs.
+
+2. TASK / NEW REQUIREMENT:
+- Build an internal preference submission page:
+  1. In PreferenceRepository.java, add:
+     List<PreferenceResponse> findBySelectCourseIgnoreCase(String courseNo);
+  2. Create PreferenceFormController.java:
+     - @GetMapping("/preferences/submit"): Passes all sorted courses (courseRepository.findAll()) and all active students (studentRepository.findAll()) to the model, returns "submit-preference".
+     - @PostMapping("/preferences/submit"): Binds courseNo, facultyName, facultyEmail, pref1, pref2, pref3, pref4. If a PreferenceResponse already exists for that courseNo, update it; otherwise create a new one. Save via preferenceRepository.save(). Redirect with success flash message.
+  3. Create submit-preference.html:
+     A responsive Thymeleaf form with Course dropdown, Faculty info, and 4 Choice dropdowns populated with:
+     "No preference. You choose for me.", "I do not want TAs.", and formatted student entries ("ROLLNO: Name [CGPA] (Program)").
+  4. Add navigation buttons linking to /preferences/submit in dashboard.html and group-manager.html.
+
+3. HARD CONSTRAINTS:
+- Do not alter existing CSV-based preference upload logic.
+- Pure Java 17, Spring Data JPA, and Thymeleaf only.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- Prevent duplicate conflicting rows for the same course number by updating existing records.
+- Ensure student option format matches the exact string regex expected by AllocationService.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide PreferenceFormController.java, submit-preference.html, and repository update.
+- Provide a standalone MockMvc test in PreferenceFormControllerTest.java asserting HTTP 200 on GET and HTTP 302 on POST with persisted preference.
