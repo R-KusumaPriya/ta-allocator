@@ -689,3 +689,39 @@ Add thorough edge-case and boundary tests to AllocationServiceTest.java:
 5. OUTPUT FORMAT & VERIFICATION:
 - Provide the updated AllocationServiceTest.java.
 - Verify that all tests pass with .\mvnw.cmd test -Dtest=AllocationServiceTest.
+---
+
+### Prompt 36: Boundary & Ingestion Unit Tests for DataUploadService
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target Test File:
+  * src/test/java/com/iitm/aero/taallocator/service/DataUploadServiceTest.java
+- Source File:
+  * src/main/java/com/iitm/aero/taallocator/service/DataUploadService.java
+- Technologies: JUnit 5, Mockito, OpenCSV, pure Java 17.
+
+2. TASK / NEW REQUIREMENT:
+Add missing defensive and boundary unit tests to DataUploadServiceTest.java:
+1. Faculty Upload Ingestion:
+   - testParseAndSaveFaculty_EmptyOrHeaderOnlyCSV(): CSV with header only does not save records.
+   - testParseAndSaveFaculty_MalformedRowsSkipped(): Rows with < 2 columns or empty names are skipped safely.
+2. Preferences Upload Ingestion:
+   - testParseAndSavePreferences_EmptyOrHeaderOnlyCSV(): CSV with header only does not save records.
+   - testParseAndSavePreferences_AlternativeHeaderNames(): CSV using alternative header variations ("select course", "preference 1", "preference 2") maps correctly to PreferenceResponse fields.
+3. Export CSV Edge Cases:
+   - testExportAllocationsCsv_EmptyCourses_WritesHeadersOnly(): When no courses exist, CSV output contains only the header row without errors.
+   - testExportAllocationsCsv_UnassignedTAs_OutputsHyphen(): Course with null ta1 and ta2 outputs "-" for TA fields in the generated CSV.
+4. Comprehensive Professor Format Verification:
+   - testParseAndSaveProfessorFormat_AllFiles(): Validates end-to-end parsing consistency across professor-formatted input sheets.
+
+3. HARD CONSTRAINTS:
+- Do not modify DataUploadService.java unless a genuine bug or unhandled NullPointerException is discovered.
+- Keep tests isolated using Mockito mocks.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- Ensure StringWriter captures the exact CSV structure verified through line-by-line assertions.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide the updated DataUploadServiceTest.java.
+- Verify that all tests pass with .\mvnw.cmd test -Dtest=DataUploadServiceTest.
