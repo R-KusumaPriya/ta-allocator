@@ -603,3 +603,49 @@ You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator 
 5. OUTPUT FORMAT & VERIFICATION:
 - Provide PreferenceFormController.java, submit-preference.html, and repository update.
 - Provide a standalone MockMvc test in PreferenceFormControllerTest.java asserting HTTP 200 on GET and HTTP 302 on POST with persisted preference.
+
+---
+
+## Phase 8: Comprehensive Unit Testing & Algorithmic Verification
+
+### Prompt 34: Comprehensive Controller Edge-Case Unit Tests for AdminController & PreferenceFormController
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target Test Files:
+  * Controller Test: src/test/java/com/iitm/aero/taallocator/controller/AdminControllerTest.java
+  * Controller Test: src/test/java/com/iitm/aero/taallocator/controller/PreferenceFormControllerTest.java
+- Source Files:
+  * Controller: src/main/java/com/iitm/aero/taallocator/controller/AdminController.java
+  * Controller: src/main/java/com/iitm/aero/taallocator/controller/PreferenceFormController.java
+- Technologies: JUnit 5, Mockito, MockMvc (standalone setup), pure Java 17.
+
+2. TASK / NEW REQUIREMENT:
+Expand the unit test coverage for AdminControllerTest and PreferenceFormControllerTest to cover all previously untested endpoints and edge cases:
+1. In AdminControllerTest.java:
+   - testResetAllData_Success(): Mocks repositories, invokes POST /admin/reset, verifies deleteAll() called across preference, course, student, and faculty repositories, redirects to "/", and verifies flash message.
+   - testResetAllData_ExceptionHandled(): Simulates repository exception during /admin/reset, verifies redirect to "/" with flash error.
+   - testUploadStudents_Success() & testUploadStudents_Exception(): MultiPart POST /upload/students.
+   - testUploadFaculty_Success() & testUploadFaculty_Exception(): MultiPart POST /upload/faculty.
+   - testUploadPreferences_Success() & testUploadPreferences_Exception(): MultiPart POST /upload/preferences.
+   - testPreviewAllocation(): GET /group/preview?id=1.0, asserts model attributes ("groupId", "courses", "previewResults", "availableStudents"), returns view "group-manager".
+   - testOverrideTa_Success() & testOverrideTa_Exception(): POST /group/override-ta with parameters (id, courseNo, slot, newRollNo).
+   - testRollbackGroupAllocations_Success() & testRollbackGroupAllocations_Exception(): POST /group/rollback with parameter (id).
+   - testUnassignTa_Success() & testUnassignTa_Exception(): POST /group/unassign with parameters (id, courseNo, slot).
+   - testSendPreferenceEmails_WithCustomNote(): POST /group/send-preference-emails passing customNote.
+   - testSendConfirmationEmails_WithCustomInstructions(): POST /group/send-confirmation-emails passing customInstructions.
+2. In PreferenceFormControllerTest.java:
+   - testProcessPreferenceForm_UpdatesExistingPreference(): When findBySelectCourseIgnoreCase returns an existing PreferenceResponse, assert that existing entity is updated and saved without creating a duplicate.
+   - testProcessPreferenceForm_BlankCourseNo_FailsGracefully(): When courseNo is blank or empty, assert flash error attribute and redirect to "/preferences/submit".
+
+3. HARD CONSTRAINTS:
+- Keep the existing MockMvc standalone setup (MockMvcBuilders.standaloneSetup(...)).
+- Do not add Spring context slices like @WebMvcTest. Keep tests fast, isolated, and mocking dependencies.
+- Pure Java 17 and Mockito; do not introduce Lombok or external libraries.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- Verify appropriate flash attributes ("message" vs "error") and redirection URLs across both success and failure execution paths.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide the complete updated AdminControllerTest.java and PreferenceFormControllerTest.java files.
+- Ensure all tests pass cleanly with .\mvnw.cmd test -Dtest=AdminControllerTest,PreferenceFormControllerTest.

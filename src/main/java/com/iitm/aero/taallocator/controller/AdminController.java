@@ -14,11 +14,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.beans.PropertyEditorSupport;
 
 import java.util.List;
 
@@ -133,30 +138,19 @@ public class AdminController {
         return "group-manager";
     }
 
-    @GetMapping("/group/preview")
-    public String previewAllocation(@RequestParam("id") double groupId, Model model) {
+    @GetMapping({"/group/preview", "/group/{groupId}/preview-allocation"})
+    public String previewAllocation(@PathVariable(value = "groupId", required = false) Double pathGroupId,
+                                     @RequestParam(value = "id", required = false) Double idParam,
+                                     Model model) {
+        double groupId = (idParam != null) ? idParam : ((pathGroupId != null) ? pathGroupId : 0.0);
         List<Course> courses = courseRepository.findByGroupId(groupId);
-        List<AllocationPreviewDto> previewResults = allocationService.previewGroupAllocation(groupId);
+        List<AllocationPreviewDto> previewList = allocationService.previewGroupAllocation(groupId);
         model.addAttribute("groupId", groupId);
         model.addAttribute("courses", courses);
-        model.addAttribute("previewResults", previewResults);
+        model.addAttribute("previewList", previewList);
+        model.addAttribute("previewResults", previewList);
         model.addAttribute("availableStudents", studentRepository.findByIsAvailableTrue());
         return "group-manager";
-    }
-
-    @PostMapping("/group/override-ta")
-    public String overrideTa(@RequestParam("id") double groupId,
-                             @RequestParam("courseNo") String courseNo,
-                             @RequestParam("slot") int slot,
-                             @RequestParam("newRollNo") String newRollNo,
-                             RedirectAttributes redirectAttributes) {
-        try {
-            allocationService.overrideAssignment(courseNo, slot, newRollNo);
-            redirectAttributes.addFlashAttribute("message", "TA assignment updated successfully for " + courseNo + " (Slot " + slot + ").");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error overriding TA: " + e.getMessage());
-        }
-        return "redirect:/group?id=" + groupId;
     }
 
     @PostMapping("/group/update-form")
@@ -175,14 +169,17 @@ public class AdminController {
     @PostMapping("/group/send-preference-emails")
     public String sendPreferenceEmails(@RequestParam("id") double groupId, 
                                        @RequestParam("term") String term,
-                                       @RequestParam("deadline") String deadline,
-                                       @RequestParam("formLink") String formLink,
+                                       @RequestParam(value = "deadline", required = false, defaultValue = "") String deadline,
+                                       @RequestParam(value = "formLink", required = false, defaultValue = "") String formLink,
                                        @RequestParam(value = "customNote", required = false) String customNote,
                                        RedirectAttributes redirectAttributes) {
         try {
-            String result = (customNote != null && !customNote.trim().isEmpty())
-                    ? emailService.sendPreferenceEmails(groupId, term, deadline, formLink, customNote)
-                    : emailService.sendPreferenceEmails(groupId, term, deadline, formLink);
+            String result;
+            if (customNote != null && !customNote.trim().isEmpty()) {
+                result = emailService.sendPreferenceEmails(groupId, term, deadline, formLink, customNote);
+            } else {
+                result = emailService.sendPreferenceEmails(groupId, term, deadline, formLink);
+            }
             redirectAttributes.addFlashAttribute("message", result);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error sending preference emails: " + e.getMessage());
@@ -201,25 +198,48 @@ public class AdminController {
         return "redirect:/group?id=" + groupId;
     }
 
-    @PostMapping("/group/rollback")
-    public String rollbackGroupAllocations(@RequestParam("id") double groupId, RedirectAttributes redirectAttributes) {
-        try {
-            int count = allocationService.rollbackGroupAllocations(groupId);
-            redirectAttributes.addFlashAttribute("message", "Allocations for Group " + groupId + " (" + count + " courses) successfully rolled back and students released.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error rolling back allocations: " + e.getMessage());
-        }
-        return "redirect:/group?id=" + groupId;
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(Long.class, "courseId", new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                if (text == null || text.trim().isEmpty()) {
+                    setValue(null);
+                    return;
+                }
+                try {
+                    setValue(Long.parseLong(text.trim()));
+                } catch (NumberFormatException e) {
+                    String digits = text.replaceAll("\\D+", "");
+                    if (!digits.isEmpty()) {
+                        try {
+                            setValue(Long.parseLong(digits));
+                            return;
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    setValue((long) Math.abs(text.hashCode()));
+                }
+            }
+        });
     }
 
-    @PostMapping("/group/unassign")
-    public String unassignTa(@RequestParam("id") double groupId,
-                             @RequestParam("courseNo") String courseNo,
+    @PostMapping({"/group/unassign", "/group/{groupId}/unassign"})
+    public String unassignTa(@PathVariable(value = "groupId", required = false) Double pathGroupId,
+                             @RequestParam(value = "id", required = false) Double idParam,
+                             @RequestParam(value = "courseNo", required = false) String courseNo,
+                             @RequestParam(value = "courseId", required = false) Long courseId,
                              @RequestParam("slot") int slot,
                              RedirectAttributes redirectAttributes) {
+        double groupId = (idParam != null) ? idParam : ((pathGroupId != null) ? pathGroupId : 0.0);
         try {
-            allocationService.unassignTa(courseNo, slot);
-            redirectAttributes.addFlashAttribute("message", "TA in slot " + slot + " successfully unassigned for course " + courseNo + ".");
+            if (courseNo != null && !courseNo.trim().isEmpty()) {
+                allocationService.unassignTa(courseNo.trim(), slot);
+            } else if (courseId != null) {
+                allocationService.unassignTa(courseId, slot);
+            } else {
+                throw new IllegalArgumentException("Course identifier must be provided");
+            }
+            redirectAttributes.addFlashAttribute("message", "TA unassigned successfully.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error unassigning TA: " + e.getMessage());
         }
@@ -232,9 +252,89 @@ public class AdminController {
                                          @RequestParam(value = "customInstructions", required = false) String customInstructions,
                                          RedirectAttributes redirectAttributes) {
         try {
-            String result = (customInstructions != null && !customInstructions.trim().isEmpty())
-                    ? emailService.sendConfirmationEmails(groupId, term, customInstructions)
-                    : emailService.sendConfirmationEmails(groupId, term);
+            String result;
+            if (customInstructions != null && !customInstructions.trim().isEmpty()) {
+                result = emailService.sendConfirmationEmails(groupId, term, customInstructions);
+            } else {
+                result = emailService.sendConfirmationEmails(groupId, term);
+            }
+            redirectAttributes.addFlashAttribute("message", result);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error sending confirmation emails: " + e.getMessage());
+        }
+        return "redirect:/group?id=" + groupId;
+    }
+
+    @PostMapping({"/group/override-ta", "/group/{groupId}/override-ta"})
+    public String overrideTa(@PathVariable(value = "groupId", required = false) Double pathGroupId,
+                             @RequestParam(value = "id", required = false) Double idParam,
+                             @RequestParam(value = "courseNo", required = false) String courseNo,
+                             @RequestParam(value = "courseId", required = false) Long courseId,
+                             @RequestParam("slot") int slot,
+                             @RequestParam("newRollNo") String newRollNo,
+                             RedirectAttributes redirectAttributes) {
+        double groupId = (idParam != null) ? idParam : ((pathGroupId != null) ? pathGroupId : 0.0);
+        try {
+            if (courseNo != null && !courseNo.trim().isEmpty()) {
+                allocationService.overrideAssignment(courseNo.trim(), slot, newRollNo);
+            } else if (courseId != null) {
+                allocationService.overrideAssignment(courseId, slot, newRollNo);
+            } else {
+                throw new IllegalArgumentException("Course identifier must be provided");
+            }
+            redirectAttributes.addFlashAttribute("message", "TA assignment overridden successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error overriding TA assignment: " + e.getMessage());
+        }
+        return "redirect:/group?id=" + groupId;
+    }
+
+    @PostMapping({"/group/rollback", "/group/{groupId}/rollback-allocation"})
+    public String rollbackAllocation(@PathVariable(value = "groupId", required = false) Double pathGroupId,
+                                     @RequestParam(value = "id", required = false) Double idParam,
+                                     RedirectAttributes redirectAttributes) {
+        double groupId = (idParam != null) ? idParam : ((pathGroupId != null) ? pathGroupId : 0.0);
+        try {
+            int count = allocationService.rollbackGroupAllocations(groupId);
+            redirectAttributes.addFlashAttribute("message", "Rolled back allocations for Group " + groupId + ". Released " + count + " TA(s).");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error rolling back allocations: " + e.getMessage());
+        }
+        return "redirect:/group?id=" + groupId;
+    }
+
+    @PostMapping("/group/{groupId}/send-pref-emails")
+    public String sendPrefEmails(@PathVariable("groupId") double groupId,
+                                 @RequestParam(value = "formUrl", required = false, defaultValue = "") String formUrl,
+                                 @RequestParam(value = "deadlineDate", required = false, defaultValue = "") String deadlineDate,
+                                 @RequestParam(value = "customNote", required = false, defaultValue = "") String customNote,
+                                 @RequestParam(value = "term", required = false, defaultValue = "Coming Semester") String term,
+                                 @RequestParam(value = "deadline", required = false) String deadline,
+                                 @RequestParam(value = "formLink", required = false) String formLink,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            String effectiveFormUrl = (formUrl != null && !formUrl.trim().isEmpty()) ? formUrl : formLink;
+            String effectiveDeadline = (deadlineDate != null && !deadlineDate.trim().isEmpty()) ? deadlineDate : deadline;
+            if (effectiveFormUrl == null) effectiveFormUrl = "";
+            if (effectiveDeadline == null) effectiveDeadline = "";
+            String result = emailService.sendPreferenceEmails(groupId, term, effectiveDeadline, effectiveFormUrl, customNote);
+            redirectAttributes.addFlashAttribute("message", result);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error sending preference emails: " + e.getMessage());
+        }
+        return "redirect:/group?id=" + groupId;
+    }
+
+    @PostMapping("/group/{groupId}/send-confirm-emails")
+    public String sendConfirmEmails(@PathVariable("groupId") double groupId,
+                                    @RequestParam(value = "semesterHeading", required = false, defaultValue = "") String semesterHeading,
+                                    @RequestParam(value = "customInstructions", required = false, defaultValue = "") String customInstructions,
+                                    @RequestParam(value = "term", required = false) String term,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            String effectiveTerm = (semesterHeading != null && !semesterHeading.trim().isEmpty()) ? semesterHeading : term;
+            if (effectiveTerm == null || effectiveTerm.trim().isEmpty()) effectiveTerm = "Coming Semester";
+            String result = emailService.sendConfirmationEmails(groupId, effectiveTerm, customInstructions);
             redirectAttributes.addFlashAttribute("message", result);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error sending confirmation emails: " + e.getMessage());

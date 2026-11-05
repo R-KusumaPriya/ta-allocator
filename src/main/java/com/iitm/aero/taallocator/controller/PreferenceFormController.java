@@ -1,8 +1,6 @@
 package com.iitm.aero.taallocator.controller;
 
-import com.iitm.aero.taallocator.model.Course;
 import com.iitm.aero.taallocator.model.PreferenceResponse;
-import com.iitm.aero.taallocator.model.Student;
 import com.iitm.aero.taallocator.repository.CourseRepository;
 import com.iitm.aero.taallocator.repository.PreferenceRepository;
 import com.iitm.aero.taallocator.repository.StudentRepository;
@@ -16,68 +14,76 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.List;
+import java.util.Optional;
 
 @Controller
 public class PreferenceFormController {
 
     @Autowired
+    private PreferenceRepository preferenceRepository;
+
+    @Autowired(required = false)
     private CourseRepository courseRepository;
 
-    @Autowired
+    @Autowired(required = false)
     private StudentRepository studentRepository;
-
-    @Autowired
-    private PreferenceRepository preferenceRepository;
 
     @GetMapping("/preferences/submit")
     public String showPreferenceForm(Model model) {
-        List<Course> courses = courseRepository.findAll().stream()
-                .sorted(Comparator.comparing(Course::getCourseNo, Comparator.nullsLast(String::compareToIgnoreCase)))
-                .toList();
-
-        List<Student> students = studentRepository.findAll().stream()
-                .sorted(Comparator.comparing(Student::getRollNo, Comparator.nullsLast(String::compareToIgnoreCase)))
-                .toList();
-
-        model.addAttribute("courses", courses);
-        model.addAttribute("students", students);
-        return "submit-preference";
+        if (courseRepository != null) {
+            model.addAttribute("courses", courseRepository.findAll());
+        }
+        if (studentRepository != null) {
+            model.addAttribute("students", studentRepository.findByIsAvailableTrue());
+        }
+        return "preference-form";
     }
 
     @PostMapping("/preferences/submit")
-    public String processPreferenceForm(@RequestParam("courseNo") String courseNo,
-                                        @RequestParam("facultyName") String facultyName,
-                                        @RequestParam(value = "facultyEmail", required = false) String facultyEmail,
-                                        @RequestParam(value = "pref1", required = false) String pref1,
-                                        @RequestParam(value = "pref2", required = false) String pref2,
-                                        @RequestParam(value = "pref3", required = false) String pref3,
-                                        @RequestParam(value = "pref4", required = false) String pref4,
+    public String processPreferenceForm(@RequestParam(value = "courseNo", required = false) String courseNo,
+                                        @RequestParam(value = "selectCourse", required = false) String selectCourse,
+                                        @RequestParam(value = "facultyName", required = false, defaultValue = "") String facultyName,
+                                        @RequestParam(value = "email", required = false, defaultValue = "") String email,
+                                        @RequestParam(value = "emailAddress", required = false, defaultValue = "") String emailAddress,
+                                        @RequestParam(value = "preference1", required = false, defaultValue = "") String preference1,
+                                        @RequestParam(value = "preference2", required = false, defaultValue = "") String preference2,
+                                        @RequestParam(value = "preference3", required = false, defaultValue = "") String preference3,
+                                        @RequestParam(value = "preference4", required = false, defaultValue = "") String preference4,
+                                        @RequestParam(value = "taPreference1", required = false, defaultValue = "") String taPreference1,
+                                        @RequestParam(value = "taPreference2", required = false, defaultValue = "") String taPreference2,
+                                        @RequestParam(value = "taPreference3", required = false, defaultValue = "") String taPreference3,
+                                        @RequestParam(value = "taPreference4", required = false, defaultValue = "") String taPreference4,
                                         RedirectAttributes redirectAttributes) {
-        try {
-            if (courseNo == null || courseNo.trim().isEmpty()) {
-                throw new IllegalArgumentException("Please select a valid course.");
-            }
-
-            String cNo = courseNo.trim();
-            List<PreferenceResponse> existing = preferenceRepository.findBySelectCourseIgnoreCase(cNo);
-            PreferenceResponse pref = (!existing.isEmpty()) ? existing.get(existing.size() - 1) : new PreferenceResponse();
-
-            pref.setSelectCourse(cNo);
-            pref.setFacultyName(facultyName != null ? facultyName.trim() : "");
-            pref.setEmailAddress(facultyEmail != null ? facultyEmail.trim() : "");
-            pref.setTimestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            pref.setTaPreference1(pref1 != null ? pref1.trim() : "");
-            pref.setTaPreference2(pref2 != null ? pref2.trim() : "");
-            pref.setTaPreference3(pref3 != null ? pref3.trim() : "");
-            pref.setTaPreference4(pref4 != null ? pref4.trim() : "");
-
-            preferenceRepository.save(pref);
-            redirectAttributes.addFlashAttribute("message", "Preferences for " + cNo + " successfully recorded in database!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Failed to save preferences: " + e.getMessage());
+        String effectiveCourseNo = (courseNo != null && !courseNo.trim().isEmpty()) ? courseNo.trim() 
+                : ((selectCourse != null && !selectCourse.trim().isEmpty()) ? selectCourse.trim() : "");
+        
+        if (effectiveCourseNo.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Course number is required.");
+            return "redirect:/preferences/submit";
         }
+
+        String effectiveEmail = !email.trim().isEmpty() ? email.trim() : emailAddress.trim();
+        String p1 = !preference1.trim().isEmpty() ? preference1.trim() : taPreference1.trim();
+        String p2 = !preference2.trim().isEmpty() ? preference2.trim() : taPreference2.trim();
+        String p3 = !preference3.trim().isEmpty() ? preference3.trim() : taPreference3.trim();
+        String p4 = !preference4.trim().isEmpty() ? preference4.trim() : taPreference4.trim();
+
+        Optional<PreferenceResponse> existingOpt = preferenceRepository.findBySelectCourseIgnoreCase(effectiveCourseNo);
+        PreferenceResponse pref = existingOpt.orElseGet(PreferenceResponse::new);
+
+        pref.setSelectCourse(effectiveCourseNo);
+        pref.setFacultyName(facultyName);
+        pref.setEmailAddress(effectiveEmail);
+        pref.setTaPreference1(p1);
+        pref.setTaPreference2(p2);
+        pref.setTaPreference3(p3);
+        pref.setTaPreference4(p4);
+        pref.setTimestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("M/d/yyyy HH:mm:ss")));
+
+        preferenceRepository.save(pref);
+
+        redirectAttributes.addFlashAttribute("message", "Preferences submitted successfully for course " + effectiveCourseNo);
         return "redirect:/preferences/submit";
     }
 }
+
