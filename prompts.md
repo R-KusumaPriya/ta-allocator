@@ -649,3 +649,43 @@ Expand the unit test coverage for AdminControllerTest and PreferenceFormControll
 5. OUTPUT FORMAT & VERIFICATION:
 - Provide the complete updated AdminControllerTest.java and PreferenceFormControllerTest.java files.
 - Ensure all tests pass cleanly with .\mvnw.cmd test -Dtest=AdminControllerTest,PreferenceFormControllerTest.
+---
+
+### Prompt 35: Service Exception & Edge-Case Unit Tests for AllocationService
+You are a senior Java 17 and Spring Boot 3 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target Test File:
+  * src/test/java/com/iitm/aero/taallocator/service/AllocationServiceTest.java
+- Source File:
+  * src/main/java/com/iitm/aero/taallocator/service/AllocationService.java
+- Technologies: JUnit 5, Mockito, pure Java 17.
+
+2. TASK / NEW REQUIREMENT:
+Add thorough edge-case and boundary tests to AllocationServiceTest.java:
+1. unassignTa Edge Cases:
+   - testUnassignTa_Slot2_Success(): Verify slot 2 student is cleared from course, marked available=true, course field cleared, and both course and student repositories saved.
+   - testUnassignTa_SlotAlreadyEmpty_DoesNothingGracefully(): Course has ta1 = null; unassigning slot 1 does not throw NullPointerException and completes safely.
+   - testUnassignTa_CourseNotFound_ThrowsIllegalArgumentException(): Verify assertThrows(IllegalArgumentException.class) when course does not exist.
+2. overrideAssignment Edge Cases:
+   - testOverrideAssignment_CourseNotFound_ThrowsException(): Unknown course throws IllegalArgumentException.
+   - testOverrideAssignment_StudentNotFound_ThrowsException(): Unknown newStudentRollNo throws IllegalArgumentException.
+   - testOverrideAssignment_SlotAlreadyEmpty_AssignsNewStudentDirectly(): Slot 1 is null; successfully assigns new student and sets availability to false.
+   - testOverrideAssignment_StudentAlreadyAssignedElsewhere_FreesFromOldCourse(): If new student was assigned to Course B Slot 1, overriding them into Course A Slot 1 clears Course B Slot 1.
+3. rollbackGroupAllocations Edge Cases:
+   - testRollbackGroupAllocations_EmptyGroup_ReturnsZero(): Group has 0 courses, returns 0 and does not error.
+4. allocateGroup Edge Cases:
+   - testAllocateGroup_EmptyCourseList_ReturnsEarly(): findByGroupId returns empty list; exits safely without throwing exception.
+   - testAllocateGroup_EmptyAvailableStudents_SavesUnassignedCourses(): Courses exist but availableStudents is empty; exits safely and saves courses with unassigned TAs.
+   - testAllocateGroup_AllNoPreference_AllocatesBasedOnCgpa(): Preference explicitly contains "No preference. You choose for me."; verify students are scored using base + CGPA weighting.
+
+3. HARD CONSTRAINTS:
+- Preserve all existing tests in AllocationServiceTest.java without breaking changes.
+- Pure Java 17 with Mockito mocks; no database access required.
+
+4. DEFENSIVE INVARIANTS & EDGE CASES:
+- Verify that student availability flags and course TA slots stay strictly in sync during overrides and unassignments.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide the updated AllocationServiceTest.java.
+- Verify that all tests pass with .\mvnw.cmd test -Dtest=AllocationServiceTest.
