@@ -2,7 +2,7 @@
 
 An automated web application built with **Java 17, Spring Boot 3, and Thymeleaf** designed to streamline and automate the Teaching Assistant (TA) allocation process for the Department of Aerospace Engineering, IIT Madras.
 
-The platform eliminates manual spreadsheets, error-prone email chains, and double-booking by providing an intelligent, constraint-aware allocation engine powered by the **Hungarian (Kuhn-Munkres) Maximum Weight Bipartite Matching Algorithm**. It features dual-channel preference collection (Google Forms API or internal web portal), interactive management controls (override, unassign, rollback, preview), and automated SMTP email dispatch.
+The platform eliminates manual spreadsheets, error-prone email chains, and double-booking by providing an intelligent, constraint-aware allocation engine powered by the **Hungarian (Kuhn-Munkres) Maximum Weight Bipartite Matching Algorithm**. It features automated Google Forms synchronization, interactive management controls (override, unassign, rollback, preview), and automated SMTP email dispatch.
 
 ---
 
@@ -17,7 +17,6 @@ The platform eliminates manual spreadsheets, error-prone email chains, and doubl
 3. [Step-by-Step External Integrations Setup](#step-by-step-external-integrations-setup)
    - [Email Integration (SMTP via Gmail or IITM Smail)](#email-integration-smtp-via-gmail-or-iitm-smail)
    - [Google Forms API Integration (credentials.json)](#google-forms-api-integration-credentialsjson)
-   - [Zero-Setup Alternative: Standalone In-App Preference Form](#zero-setup-alternative-standalone-in-app-preference-form)
    - [H2 Database Web Console](#h2-database-web-console)
 4. [System Architecture & Workflow](#system-architecture--workflow)
 5. [CSV Data Formats](#csv-data-formats)
@@ -35,9 +34,8 @@ The platform eliminates manual spreadsheets, error-prone email chains, and doubl
   - **Single-Click Unassignment (`✕`):** Frees an individual TA slot and instantly marks the student available again.
   - **Manual Assignment Override:** Reassign any student directly to Slot 1 or Slot 2 via an inline dropdown form.
   - **Per-Group Rollback / Undo:** Undo an entire group's allocation round in one click, clearing course slots and releasing all assigned students.
-- **Dual-Channel Faculty Preference Collection:**
-  - **Live Google Forms API (v1):** Automatically updates live Google Form dropdown choices with department courses and unassigned student roll numbers.
-  - **Internal Web Portal (`/preferences/submit`):** A standalone in-app preference submission page where professors can submit choices directly via browser without Google Cloud dependencies.
+- **Automated Google Forms Synchronization & Ingestion:**
+  Automatically updates live Google Form dropdown choices with department courses and unassigned student roll numbers via Google Forms API (v1), and seamlessly ingests response CSV exports.
 - **Customizable Automated Email Dispatch:**
   Sends preference collection requests and allotment confirmations via Gmail/Smail SMTP, supporting custom coordinator notes and special instructions injected dynamically into message bodies.
 - **Departmental Constraints & Safety Checks:**
@@ -244,19 +242,6 @@ To synchronize active courses and available student roll numbers directly into a
 
 ---
 
-### Zero-Setup Alternative: Standalone In-App Preference Form
-
-If you do not wish to set up Google Cloud credentials, use the built-in internal preference portal:
-
-1. Open your browser to:
-   ```text
-   http://localhost:8080/preferences/submit
-   ```
-2. Faculty members can select their course from a dropdown, enter their name and email, and pick 4 TA preferences directly on the page.
-3. Submitting records the preference straight into the database, ready for immediate matching without CSV downloads.
-
----
-
 ### H2 Database Web Console
 
 To inspect, query, or verify database tables directly via SQL:
@@ -272,34 +257,31 @@ To inspect, query, or verify database tables directly via SQL:
 ## System Architecture & Workflow
 
 ```
-                                [ Admin / Faculty Web Browser ]
-                                               |
-                               (HTTP GET / POST via Thymeleaf)
-                                               |
-                                    [ Spring MVC Controllers ]
-                      +------------------------+------------------------+
-                      |                                                 |
-             [ AdminController ]                            [ PreferenceFormController ]
-                      |                                                 |
-       +--------------+--------------+-------------+                    |
-       |                             |             |                    |
-[ DataUploadService ]       [ AllocationService ]  |                    |
-       |                             |             |                    |
-   (OpenCSV)             (Hungarian Algorithm)     |                    |
-       |                             |             |                    |
-       +--------------+--------------+             |                    |
-                      |                            |                    |
-             [ Spring Data JPA ]           [ EmailService ]             |
-                      |                            |                    |
-           [ Embedded H2 Database ]         (JavaMailSender)            |
-             (./data/tadb.mv.db)                   |                    |
-                      |                            v                    |
-            [ GoogleFormsService ]       [ Faculty Email Inboxes ]      |
-                      |                                                 |
-            (Google Forms API v1)                                       |
-                      |                                                 |
-                      v                                                 v
-             [ Live Google Form ]                     [ In-App Preference Form ]
+                                [ Admin Web Browser ]
+                                          |
+                           (HTTP GET / POST via Thymeleaf)
+                                          |
+                               [ AdminController.java ]
+                                          |
+       +--------------------+-------------+--------------------+
+       |                    |                                  |
+[ DataUploadService ] [ AllocationService ]            [ EmailService ]
+       |                    |                                  |
+   (OpenCSV)      (Hungarian Algorithm)                 (JavaMailSender /
+       |                    |                              Gmail SMTP)
+       +-----------+--------+                                  |
+                   |                                           v
+          [ Spring Data JPA ]                       [ Faculty Email Inboxes ]
+                   |
+        [ Embedded H2 Database ]
+          (./data/tadb.mv.db)
+                   |
+         [ GoogleFormsService ]
+                   |
+         (Google Forms API v1)
+                   |
+                   v
+          [ Live Google Form ]
 ```
 
 ---
