@@ -1,19 +1,27 @@
-course_id,faculty_name,choice1,choice2,choice3,choice4
-AS6000,Bharath Govindarajan,AE25M021,AE25M028,,
-AS5100,Murthy H S N,AE22B109,AE22B110,,
-AS5100*,Nidish Narayanaa Balaji,AE24D004,AE22B102,,
-AS2100,Senthil Murugan M,AE22B105,AE23D205,,
-AS2100-,Aniketh Kalur,AE22B060,AE25D006,,
-AS2100+,Manikandan M S,AE22B003,AE22B109,AE22B102,
-AS2100$,Ramakrishna P A,AE22B059,AE22B007,,
-AS2510,Pradeep Kumar Seshadri,I do not want TAs.,I do not want TAs.,I do not want TAs.,I do not want TAs.
-AS2510$,Pradeep Kumar Seshadri,AE25M034,AE25D012,,
-AS2510*,Santanu Ghosh,AE25M020,AE22B010,,
-AS5110,Luoyi Tao,AE24D203,AE24D403,,
-AS5110*,Rajesh G,AE23D201,AE24D407,,
-AS5010,Sameen A,AE24D012,AE23D006,,
-AS5010*,Sunetra Sarkar,AE24D034,AE25M033,,
-AS5011,Rajesh G,AE25M037,AE22B066,,
-AS5011*,Nikhil Khobragade,AE23D018,AE25M010,,
-AS5020,Amit Kumar,AE23D002,AE24D020,,
-AS5020*,Ramakrishna P A,No preference. You choose for me.,No preference. You choose for me.,No preference. You choose for me.,No preference. You choose for me.
+Timestamp,Email Address,Faculty Name,Select Course,TA Preference 1,TA Preference 2,TA Preference 3,TA Preference 4
+8/1/2026 10:00:00,bharath@iitm.ac.in,BHARATH GOVINDARAJAN,AS6000,AE25M021: MS Candidate M021,AE25M028: MS Candidate M028,AE22B003: PURNA ANANTHKRISHNAN,AE22B102: ANSHITA HEGDE
+8/1/2026 10:30:00,mhsn@iitm.ac.in,MURTHY H S N,AS5100,AE22B109: RAJASEGARANE R,AE22B110: YASH SHAJIL,AE24S005: MTech Candidate S005,AE22B010: BHADRA S
+8/1/2026 11:00:00,nidish@iitm.ac.in,NIDISH NARAYANAA BALAJI,AS5100*,AE24D004: PhD Candidate D004,AE22B102: ANSHITA HEGDE,AE22B003: PURNA ANANTHKRISHNAN,AE22B008: U SHRIRAM
+8/1/2026 11:30:00,drsen@iitm.ac.in,SENTHIL MURUGAN M,AS2100,AE22B105: JAHAAN RITESH SHAH,AE23D205: PhD Candidate D205,AE22B060: STANY BENNY,AE22B028: CHARUKHESH B R
+8/1/2026 12:00:00,aniketh.kalur@iitm.ac.in,ANIKETH KALUR,AS2100-,AE22B060: STANY BENNY,AE25D006: PhD Candidate D006,AE22B108: OM SATISH YEOLE,AE22B067: KAVIN ARVINTH RAVICHANDRAN
+8/1/2026 12:30:00,manims@iitm.ac.in,MANIKANDAN M S,AS2100+,AE22B003: PURNA ANANTHKRISHNAN,AE22B028: CHARUKHESH B R,AE22B070: CHIRAG V GAONKAR,AE22B008: U SHRIRAM
+8/1/2026 13:00:00,parama@iitm.ac.in,RAMAKRISHNA P A,AS2100$,AE22B059: SREERAM MADHAVAN V,AE22B007: PRIYAVRATA TIWARI,AE22B013: SAI SUDDHIR A B,AE22B004: PAWDE MEDHAJ RAGHUVEER
+8/1/2026 13:30:00,pkseshadri@iitm.ac.in,PRADEEP KUMAR SESHADRI,AS2510,I do not want TAs.,I do not want TAs.,I do not want TAs.,I do not want TAs.
+8/1/2026 14:00:00,pkseshadri@iitm.ac.in,PRADEEP KUMAR SESHADRI,AS2510$,AE25M034: MS Candidate M034,AE25D012: PhD Candidate D012,AE22B013: SAI SUDDHIR A B,AE25M020: MS Candidate M020
+8/1/2026 14:30:00,sghosh1@iitm.ac.in,SANTANU GHOSH,AS2510*,AE25M020: MS Candidate M020,AE22B010: BHADRA S,AE24D203: PhD Candidate D203,AE24D403: PhD Candidate D403
+8/1/2026 15:00:00,luoyitao@iitm.ac.in,LUOYI TAO,AS5110,AE24D203: PhD Candidate D203,AE24D403: PhD Candidate D403,AE23D201: PhD Candidate D201,AE24D407: PhD Candidate D407
+8/1/2026 15:30:00,grajesh@iitm.ac.in,RAJESH G,AS5110*,AE23D201: PhD Candidate D201,AE24D407: PhD Candidate D407,AE24D012: PhD Candidate D012,AE23D006: PhD Candidate D006
+8/1/2026 16:00:00,sameen@iitm.ac.in,SAMEEN A,AS5010,AE24D012: PhD Candidate D012,AE23D006: PhD Candidate D006,AE24D034: PhD Candidate D034,AE25M033: MS Candidate M033
+8/1/2026 16:30:00,sunetra@iitm.ac.in,SUNETRA SARKAR,AS5010*,AE24D034: PhD Candidate D034,AE25M033: MS Candidate M033,AE25M037: MS Candidate M037,AE22B066: PRIYANKA G
+8/1/2026 17:00:00,grajesh@iitm.ac.in,RAJESH G,AS5011,AE25M037: MS Candidate M037,AE22B066: PRIYANKA G,AE23D018: PhD Candidate D018,AE25M010: MS Candidate M010
+8/1/2026 17:30:00,nikhilnk@iitm.ac.in,NIKHIL KHOBRAGADE,AS5011*,AE23D018: PhD Candidate D018,AE25M010: MS Candidate M010,AE23D002: PhD Candidate D002,AE24D020: PhD Candidate D020
+8/1/2026 18:00:00,amitk@iitm.ac.in,AMIT KUMAR,AS5020,AE23D002: PhD Candidate D002,AE24D020: PhD Candidate D020,AE25M040: MS Candidate M040,AE24S019: MTech Candidate S019
+8/1/2026 18:30:00,parama@iitm.ac.in,RAMAKRISHNA P A,AS5020*,No preference. You choose for me.,No preference. You choose for me.,No preference. You choose for me.,No preference. You choose for me.
+8/1/2026 22:13:09,deva@iitm.ac.in,DEVAPRAKASH MUNIRAJ,AE5510,I do not want TAs.,I do not want TAs.,I do not want TAs.,I do not want TAs.
+8/2/2026 1:36:35,satadal@iitm.ac.in,SATADAL GHOSH,AS5570,No preference. You choose for me.,No preference. You choose for me.,No preference. You choose for me.,No preference. You choose for me.
+8/2/2026 15:58:21,kbhas@iitm.ac.in,BHASKAR K,AS5820,I do not want TAs.,I do not want TAs.,I do not want TAs.,I do not want TAs.
+8/2/2026 16:10:15,aswathys@iitm.ac.in,ASWATHY SURENDRAN,AS6320,AE24D006: PhD Candidate D006C,AE24D017: PhD Candidate D017,AE23D201: PhD Candidate D201,AE25D402: PhD Candidate D402
+8/3/2026 10:54:06,sujith@iitm.ac.in,SUJITH R I,AS6340,AE25D402: PhD Candidate D402,AE25D012: PhD Candidate D012,AE25D015: PhD Candidate D015,AE24D006: PhD Candidate D006C
+8/3/2026 11:33:42,sumit.tambe@iitm.ac.in,SUMIT SUNIL TAMBE,AS5320,AE25D012: PhD Candidate D012,AE25D006: PhD Candidate D006,AE25D402: PhD Candidate D402,AE25D900: PhD Candidate D900
+8/4/2026 1:25:51,nagappa@iitm.ac.in,NAGAPPA,AS5960,AE25M011: MS Candidate M011,AE24S035: MTech Candidate S035,AE24S022: MTech Candidate S022,AE25M044: MS Candidate M044
+8/6/2026 15:13:13,aniketh.kalur@iitm.ac.in,ANIKETH KALUR,AS5401,AE25D406: PhD Candidate D406,AE25D403: PhD Candidate D403B,AE23D203: PhD Candidate D203B,No preference. You choose for me.

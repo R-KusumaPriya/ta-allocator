@@ -1,21 +1,67 @@
-id,name,faculty_name,faculty_email,priority,group_id
-AS6000,Basic Concepts in Aerospace Engineering,Bharath Govindarajan,vijayshekar.ratcha@gmail.com,5,0
-AS5100,Mini Project,Murthy H S N,ae23b049@smail.iitm.ac.in,10,0
-AS5100*,Mini Project,Nidish Narayanaa Balaji,ae23b049@smail.iitm.ac.in,10,0
-AS2100,Basic Aerospace Engineering Lab,Senthil Murugan M,aayush.srinivasan@gmail.com,20,1
-AS2100-,Basic Aerospace Engineering Lab,Aniketh Kalur,ae23b049@smail.iitm.ac.in,20,1
-AS2100+,Basic Aerospace Engineering Lab,Manikandan M S,kusumapriya.ratcha@gmail.com,20,1
-AS2100$,Basic Aerospace Engineering Lab,Ramakrishna P A,aayush.srinivasan@gmail.com,20,1
-AS2510,Low Speed Lab,Pradeep Kumar Seshadri,vijayshekar.ratcha@gmail.com,25,1
-AS2510$,Low Speed Lab,Pradeep Kumar Seshadri,vijayshekar.ratcha@gmail.com,25,1
-AS2510*,Low Speed Lab,Santanu Ghosh,kusumapriya.ratcha@gmail.com,25,1
-AS5110,Laboratory I,Luoyi Tao,radhikashekar.ratcha@gmail.com,26,1
-AS5110*,Laboratory I,Rajesh G,ae23b049@smail.iitm.ac.in,26,1
-AS5010,Aerodynamics and Aircraft Performance,Sameen A,radhikashekar.ratcha@gmail.com,28,2
-AS5010*,Aerodynamics and Aircraft Performance,Sunetra Sarkar,kusumapriya.ratcha@gmail.com,28,2
-AS5011,Compressible Fluid Flows,Rajesh G,ae23b049@smail.iitm.ac.in,28,2
-AS5011*,Compressible Fluid Flows,Nikhil Khobragade,aayush.srinivasan@gmail.com,28,2
-AS5020,Aerospace Propulsion,Amit Kumar,kusumapriya.ratcha@gmail.com,28,2
-AS5020*,Aerospace Propulsion,Ramakrishna P A,aayush.srinivasan@gmail.com,28,2
-AS6999,Special Topics in Aerospace Engineering,Sameen A,radhikashekar.ratcha@gmail.com,100,3
-AS4546,Undergraduate Research,Sameen A,radhikashekar.ratcha@gmail.com,100,3
+CourseNo,Semester,Priority,CourseName,InstructorName,# TotalRegn,Group ID,TA 1,TA 2,Column 1,Column 2,Column 3
+AS6000,15,5,Basic Concepts in Aerospace Engineering,BHARATH GOVINDARAJAN,0,1,AE25M021,AE25M028,,,,
+AS5100,11,10,Mini Project,MURTHY H S N,46,1,AE22B109,AE22B110,AE22B109,AE22B110,AE25S005
+AS5100*,11,10,Mini Project,NIDISH NARAYANAA BALAJI,16,1,AE24D004,AE22B102,,,,
+AS2100,3,20,Basic Aerospace Engineering Lab,SENTHIL MURUGAN M,0,1,AE22B105,AE23D205,,,,
+AS2100-,3,20,Basic Aerospace Engineering Lab,ANIKETH KALUR,0,1,AE22B060,AE25D006,,,,
+AS2100+,3,20,Basic Aerospace Engineering Lab,MANIKANDAN M S,0,1,AE22B003,,,,,
+AS2100$,3,20,Basic Aerospace Engineering Lab,RAMAKRISHNA P A,0,1,AE22B059,AE22B007,,,,
+AS2510,3,25,Low Speed Lab,PRADEEP KUMAR SESHADRI,0,1,AE25M034,AE25D012,,,,
+AS2510$,3,25,Low Speed Lab,PRADEEP KUMAR SESHADRI,0,1,AE25M020,AE22B010,,,,
+AS2510*,3,25,Low Speed Lab,SANTANU GHOSH,0,1,AE24D203,AE24D403,,,,
+AS5110,9,26,Laboratory I,LUOYI TAO,0,1,AE23D201,AE24D407,,,,
+AS5110*,9,26,Laboratory I,RAJESH G,0,1,AE24D012,AE23D006,,,,
+AS5010,9,28,Aerodynamics and Aircraft Performance,SAMEEN A,2,2,AE24D034,AE25M033,,,,
+AS5010*,9,28,Aerodynamics and Aircraft Performance,SUNETRA SARKAR,1,2,AE25M037,AE22B066,,,,
+AS5011,9,28,Compressible Fluid Flows,RAJESH G,1,2,AE23D018,AE25M010,,,,
+AS5011*,9,28,Compressible Fluid Flows,NIKHIL KHOBRAGADE,1,2,AE23D002,AE24D020,,,,
+AS5020,9,28,Aerospace Propulsion,AMIT KUMAR,3,2,AE25M040,AE24S019,,,,
+AS5020*,9,28,Aerospace Propulsion,RAMAKRISHNA P A,1,2,AE24S023,AE24D402,,,,
+AS5030,9,28,Aerospace Structures,PRASHANT RAWAT,1,2,AE25M031,AE25M032,,,,
+AS5030*,9,28,Aerospace Structures,VELMURUGAN R,2,2,AE23D009,AE24D036,,,,
+AS3520,5,30,Aero Lab II,NAGAPPA,0,2,,,,,,
+AS3520$,5,30,Aero Lab II,SHYAM KERALAVARMA,0,2,AE24D027,AE24D025,,,,
+AS3520*,5,30,Aero Lab II,NIKHIL KHOBRAGADE,0,2,AE23D202,AE24D009,,,,
+AS2520,5,35,Propulsion Lab,RAMAKRISHNA P A,0,2,AE22B067,AE24D200,,,,
+AS2520*,5,35,Propulsion Lab,RAMAKRISHNA P A,0,2,AE24S017,AE24D401,,,,
+AS2010,3,40,Basic Strength of Materials,DAVID KUMAR,0,2,AE23D001,AE24S022,,,,
+AS2010*,3,40,Basic Strength of Materials,NIDISH NARAYANAA BALAJI,0,2,AE22B001,AE24D002,,,,
+AS2030,3,42,Gas Dynamics,SHANKAR GHOSH,0,2,AE22B006,AE25M045,,,,
+AS2030*,3,42,Gas Dynamics,SRIRAM RENGARAJAN,0,2,AE22B030,AE22B004,,,,
+AS2050,3,42,Aerodynamics,LUOYI TAO,0,2,AE25M036,AE25M061,,,,
+AS2050*,3,42,Aerodynamics,PRADEEP KUMAR SESHADRI,0,2,AE24S038,AE25M058,,,,
+AS3020,5,44,Aerospace Structures,SHANTANU SHASHIKANT MULAY,0,2,AE25M052,AE23D400,,,,
+AS3020*,5,44,Aerospace Structures,SENTHIL MURUGAN M,0,2,AE22B002,AE25M039,,,,
+AS3050,5,44,Flight Dynamics II,JOEL GEORGE M,0,3,,,,,,,
+AS3050*,5,44,Flight Dynamics II,NANDAN KUMAR SINHA,0,3,AE24D028,AE23D005,,,,
+AS3271,5,44,Propulsion II,PRAVENDRA KUMAR,0,3,,,,,,,
+AS3271*,5,44,Propulsion II,CHAKRAVARTHY S R,0,3,,,,,,,
+AE5510,13,60,Security of safety-critical systems,DEVAPRAKASH MUNIRAJ,1,3,,,,,,,
+AS5320,13,60,Boundary Layer Theory,SUMIT SUNIL TAMBE,2,3,AE25D402,AE25D900,,,,
+AS5401,13,60,Data-driven modelling of complex aerospa,ANIKETH KALUR,6,3,AE25D406,AE25D403,,,,
+AS5430,13,60,Stability of Shear Flows,MANIKANDAN M S,4,3,,,,,,
+AS5460,13,60,Finite Volume Methods for Hyperbolic PD,SANTANU GHOSH,3,3,,,,,,,
+AS5570,13,60,Principles of Guidance for Autonomous V,SATADAL GHOSH,6,3,AE24S012,AE24S021,,,,
+AS5580,13,60,Pseudo-Spectral Methods for Optimal Co,RANJITH MOHAN,0,3,,,,,,,
+AS5621,13,60,Design and Analysis of Turbomachines,VADLAMANI NAGABHUSHANA RAO,3,3,,,,,,,
+AS5640,13,60,Combustion, Explosion and Detonation,MURUGANANDAM T M,4,3,,,,,,,
+AS5820,13,60,Analysis of Plates and Shells,BHASKAR K,0,3,,,,,,,
+AS5850,13,60,Finite Element Analysis,NAGENDRA GOPAL K V,7,3,,,,,,
+AS5880,13,60,Mechanics of Damage Tolerance,SHYAM KERALAVARMA,2,3,,,,,,
+AS5960,13,60,Advanced Strength of Materials,NAGAPPA,0,3,,,,,,
+AS5980,13,60,Contact Mechanics and Tribology,MURTHY H S N,3,3,,,,,,,
+AS6320,13,60,Acoustic Instabilities in Aerospace Prop,ASWATHY SURENDRAN,3,3,,,,,,
+AS6340,13,60,Combustion and Flow Diagnostics,SUJITH R I,9,3,,,,,,
+AS6520,13,60,Mathematics for Aerospace Engineers,SIVASAMBU MAHESH,2,3,AE23D014,AE24D030,,,,
+AS6520*,13,60,Mathematics for Aerospace Engineers,RANJITH MOHAN,3,3,AE25D001,AE25D004,,,,
+AE6999,13,100,Special Topics in Aerospace Engineering,SAMEEN A,2,4,,,,,,
+AE7999,13,100,Special Topics in Aerospace Engineering,SAMEEN A,0,4,,,,,,
+AS4545,15,100,Undergraduate Research,SAMEEN A,2,4,,,,,,
+AS4546,15,100,Undergraduate Research - II,SAMEEN A,0,4,,,,,,
+AS4600+,15,100,Project I,SAMEEN A,0,4,,,,,,
+AS5150#,11,100,M.Tech. Project,SAMEEN A,0,4,,,,,,
+AS5150$,11,100,M.Tech Project Proposal,SAMEEN A,0,4,,,,,,
+AS5150+,11,100,M.Tech. Project,SAMEEN A,63,4,,,,,,
+AS5190#,11,100,DD Project Proposal,SAMEEN A,0,4,,,,,,
+AS5191,11,100,DD Project,SAMEEN A,0,4,,,,,,
+AS5192,11,100,DD Project,SAMEEN A,14,4,,,,,,

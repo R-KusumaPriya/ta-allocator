@@ -1,47 +1,91 @@
-id,name,email,gpa,program,advisor,available
-AE22B003,Purna Ananthkrishnan,kusumapriya.ratcha@gmail.com,9.81,BTech,,TRUE
-AE22B102,Anshita Hegde,ae23b049@smail.iitm.ac.in,9.48,BTech,,TRUE
-AE22B110,Yash Shajil,aayush.srinivasan@gmail.com,9.46,BTech,,TRUE
-AE22B010,Bhadra S,vijayshekar.ratcha@gmail.com,9.2,BTech,,TRUE
-AE22B008,U Shriram,radhikashekar.ratcha@gmail.com,9.17,BTech,,TRUE
-AE22B066,Priyanka G,kusumapriya.ratcha@gmail.com,9.16,BTech,,TRUE
-AE22B028,Charukhesh B R,ae23b049@smail.iitm.ac.in,9.12,BTech,,TRUE
-AE22B060,Stany Benny,aayush.srinivasan@gmail.com,8.81,BTech,,TRUE
-AE22B067,Kavin Arvinth Ravichandran,vijayshekar.ratcha@gmail.com,8.78,BTech,,TRUE
-AE22B006,Karthik Puranam,radhikashekar.ratcha@gmail.com,8.76,BTech,,TRUE
-AE22B109,Rajasegarane R,kusumapriya.ratcha@gmail.com,8.68,BTech,,TRUE
-AE22B026,Avuthu Neeraja Reddy,ae23b049@smail.iitm.ac.in,8.67,BTech,,FALSE
-AE22B070,Chirag V Gaonkar,aayush.srinivasan@gmail.com,8.67,BTech,,TRUE
-AE22B002,Kancharlapalli Sai Siddhartha Bajrang,vijayshekar.ratcha@gmail.com,8.54,BTech,,TRUE
-AE22B007,Priyavrata Tiwari,radhikashekar.ratcha@gmail.com,8.53,BTech,,TRUE
-AE22B030,Dhyan G,kusumapriya.ratcha@gmail.com,8.53,BTech,,TRUE
-AE22B059,Sreeram Madhavan V,ae23b049@smail.iitm.ac.in,8.53,BTech,,TRUE
-AE22B004,Pawde Medhaj Raghuveer,aayush.srinivasan@gmail.com,8.36,BTech,,TRUE
-AE22B013,Sai Suddhir A B,vijayshekar.ratcha@gmail.com,8.06,BTech,,TRUE
-AE22B105,Jahaan Ritesh Shah,radhikashekar.ratcha@gmail.com,7.88,BTech,,TRUE
-AE21D001,DD Candidate D001,kusumapriya.ratcha@gmail.com,8.2,DD,Dr. Iyer,TRUE
-AE21D002,DD Candidate D002,ae23b049@smail.iitm.ac.in,8.4,DD,Dr. Ramesh,TRUE
-AE25M021,MS Candidate M021,aayush.srinivasan@gmail.com,8.9,MS,Dr. Iyer,TRUE
-AE25M028,MS Candidate M028,vijayshekar.ratcha@gmail.com,8.7,MS,Dr. Menon,TRUE
-AE25M034,MS Candidate M034,radhikashekar.ratcha@gmail.com,9,MS,Dr. Iyer,TRUE
-AE25M020,MS Candidate M020,kusumapriya.ratcha@gmail.com,8.5,MS,Dr. Ramesh,TRUE
-AE25M033,MS Candidate M033,ae23b049@smail.iitm.ac.in,8.6,MS,Dr. Menon,TRUE
-AE25M037,MS Candidate M037,aayush.srinivasan@gmail.com,8.8,MS,Dr. Iyer,TRUE
-AE25M010,MS Candidate M010,vijayshekar.ratcha@gmail.com,9.1,MS,Dr. Ramesh,TRUE
-AE25M040,MS Candidate M040,radhikashekar.ratcha@gmail.com,8.4,MS,Dr. Menon,TRUE
-AE24S019,MTech Candidate S019,kusumapriya.ratcha@gmail.com,8.5,MTech,,TRUE
-AE24S005,MTech Candidate S005,ae23b049@smail.iitm.ac.in,8.3,MTech,,TRUE
-AE24D004,PhD Candidate D004,aayush.srinivasan@gmail.com,9.2,PhD,Dr. Krishnan,TRUE
-AE23D205,PhD Candidate D205,vijayshekar.ratcha@gmail.com,8.9,PhD,Dr. Suresh,TRUE
-AE25D006,PhD Candidate D006,radhikashekar.ratcha@gmail.com,8.7,PhD,Dr. Krishnan,TRUE
-AE25D012,PhD Candidate D012,kusumapriya.ratcha@gmail.com,9,PhD,Dr. Meera,TRUE
-AE24D203,PhD Candidate D203,ae23b049@smail.iitm.ac.in,8.8,PhD,Dr. Suresh,TRUE
-AE24D403,PhD Candidate D403,aayush.srinivasan@gmail.com,8.6,PhD,Dr. Krishnan,TRUE
-AE23D201,PhD Candidate D201,vijayshekar.ratcha@gmail.com,9.3,PhD,Dr. Meera,TRUE
-AE24D407,PhD Candidate D407,radhikashekar.ratcha@gmail.com,8.5,PhD,Dr. Suresh,TRUE
-AE24D012,PhD Candidate D012B,kusumapriya.ratcha@gmail.com,8.9,PhD,Dr. Krishnan,TRUE
-AE23D006,PhD Candidate D006B,ae23b049@smail.iitm.ac.in,9.1,PhD,Dr. Meera,TRUE
-AE24D034,PhD Candidate D034,aayush.srinivasan@gmail.com,8.7,PhD,Dr. Suresh,TRUE
-AE23D018,PhD Candidate D018,vijayshekar.ratcha@gmail.com,8.6,PhD,Dr. Krishnan,TRUE
-AE23D002,PhD Candidate D002,radhikashekar.ratcha@gmail.com,9,PhD,Dr. Meera,TRUE
-AE24D020,PhD Candidate D020,kusumapriya.ratcha@gmail.com,8.8,PhD,Dr. Suresh,TRUE
+Roll No.,Name,# CGPA,Program,Available,Course
+AE22B003,PURNA ANANTHKRISHNAN,9.81,BTech,TRUE,
+AE22B102,ANSHITA HEGDE,9.48,BTech,TRUE,
+AE22B110,YASH SHAJIL,9.46,BTech,TRUE,
+AE22B010,BHADRA S,9.2,BTech,TRUE,
+AE22B008,U SHRIRAM,9.17,BTech,TRUE,
+AE22B066,PRIYANKA G,9.16,BTech,TRUE,
+AE22B028,CHARUKHESH B R,9.12,BTech,TRUE,
+AE22B060,STANY BENNY,8.81,BTech,TRUE,
+AE22B067,KAVIN ARVINTH RAVICHANDRAN,8.78,BTech,TRUE,
+AE22B006,KARTHIK PURANAM,8.76,BTech,TRUE,
+AE22B109,RAJASEGARANE R,8.68,BTech,TRUE,
+AE22B026,AVUTHU NEERAJA REDDY,8.67,BTech,TRUE,
+AE22B070,CHIRAG V GAONKAR,8.67,BTech,TRUE,
+AE22B002,KANCHARLAPALLI SAI SIDDHARTHA BAJRANG,8.54,BTech,TRUE,
+AE22B007,PRIYAVRATA TIWARI,8.53,BTech,TRUE,
+AE22B030,DHYAN G,8.53,BTech,TRUE,
+AE22B059,SREERAM MADHAVAN V,8.53,BTech,TRUE,
+AE22B004,PAWDE MEDHAJ RAGHUVEER,8.36,BTech,TRUE,
+AE22B013,SAI SUDDHIR A B,8.06,BTech,TRUE,
+AE22B068,SAHASYA P,7.89,BTech,TRUE,
+AE22B105,JAHAAN RITESH SHAH,7.88,BTech,TRUE,
+AE22B005,ABHINAV SINGH,7.77,BTech,TRUE,
+AE22B108,OM SATISH YEOLE,7.63,BTech,TRUE,
+AE22B107,MANVITHA ANKAM,7.09,BTech,TRUE,
+AE22B103,CHINTHAREDDY AMAN REDDY,6.91,BTech,TRUE,
+AE22B104,AYUSH KUMAR KHARWAR,6.0,BTech,TRUE,
+AE25M021,MS Candidate M021,8.9,MS,TRUE,
+AE25M028,MS Candidate M028,8.7,MS,TRUE,
+AE25M034,MS Candidate M034,9.0,MS,TRUE,
+AE25M020,MS Candidate M020,8.5,MS,TRUE,
+AE25M033,MS Candidate M033,8.6,MS,TRUE,
+AE25M037,MS Candidate M037,8.8,MS,TRUE,
+AE25M010,MS Candidate M010,9.1,MS,TRUE,
+AE25M040,MS Candidate M040,8.4,MS,TRUE,
+AE25M031,MS Candidate M031,8.7,MS,TRUE,
+AE25M032,MS Candidate M032,8.6,MS,TRUE,
+AE25M045,MS Candidate M045,8.8,MS,TRUE,
+AE25M036,MS Candidate M036,8.5,MS,TRUE,
+AE25M061,MS Candidate M061,8.7,MS,TRUE,
+AE25M058,MS Candidate M058,8.9,MS,TRUE,
+AE25M052,MS Candidate M052,9.0,MS,TRUE,
+AE25M039,MS Candidate M039,8.6,MS,TRUE,
+AE24S019,MTech Candidate S019,8.5,MTech,TRUE,
+AE24S005,MTech Candidate S005,8.3,MTech,TRUE,
+AE24S023,MTech Candidate S023,8.6,MTech,TRUE,
+AE24S017,MTech Candidate S017,8.8,MTech,TRUE,
+AE24S022,MTech Candidate S022,8.7,MTech,TRUE,
+AE24S038,MTech Candidate S038,8.5,MTech,TRUE,
+AE24S012,MTech Candidate S012,8.9,MTech,TRUE,
+AE24S021,MTech Candidate S021,8.6,MTech,TRUE,
+AE24S035,MTech Candidate S035,8.7,MTech,TRUE,
+AE24D004,PhD Candidate D004,9.2,PhD,TRUE,
+AE23D205,PhD Candidate D205,8.9,PhD,TRUE,
+AE25D006,PhD Candidate D006,8.7,PhD,TRUE,
+AE25D012,PhD Candidate D012,9.0,PhD,TRUE,
+AE24D203,PhD Candidate D203,8.8,PhD,TRUE,
+AE24D403,PhD Candidate D403,8.6,PhD,TRUE,
+AE23D201,PhD Candidate D201,9.3,PhD,TRUE,
+AE24D407,PhD Candidate D407,8.5,PhD,TRUE,
+AE24D012,PhD Candidate D012,8.9,PhD,TRUE,
+AE23D006,PhD Candidate D006,9.1,PhD,TRUE,
+AE24D034,PhD Candidate D034,8.7,PhD,TRUE,
+AE23D018,PhD Candidate D018,8.6,PhD,TRUE,
+AE23D002,PhD Candidate D002,9.0,PhD,TRUE,
+AE24D020,PhD Candidate D020,8.8,PhD,TRUE,
+AE24D002,PhD Candidate D002B,8.9,PhD,TRUE,
+AE24D027,PhD Candidate D027,8.7,PhD,TRUE,
+AE24D025,PhD Candidate D025,8.8,PhD,TRUE,
+AE23D202,PhD Candidate D202,8.6,PhD,TRUE,
+AE24D009,PhD Candidate D009,8.7,PhD,TRUE,
+AE24D200,PhD Candidate D200,8.9,PhD,TRUE,
+AE24D401,PhD Candidate D401,9.0,PhD,TRUE,
+AE23D001,PhD Candidate D001,9.1,PhD,TRUE,
+AE23D400,PhD Candidate D400,8.8,PhD,TRUE,
+AE24D028,PhD Candidate D028,8.7,PhD,TRUE,
+AE23D005,PhD Candidate D005,8.9,PhD,TRUE,
+AE25D402,PhD Candidate D402,9.2,PhD,TRUE,
+AE25D900,PhD Candidate D900,8.5,PhD,TRUE,
+AE25D406,PhD Candidate D406,8.8,PhD,TRUE,
+AE25D403,PhD Candidate D403B,8.7,PhD,TRUE,
+AE23D014,PhD Candidate D014,8.9,PhD,TRUE,
+AE24D030,PhD Candidate D030,8.8,PhD,TRUE,
+AE25D001,PhD Candidate D001B,9.1,PhD,TRUE,
+AE25D004,PhD Candidate D004B,8.7,PhD,TRUE,
+AE24D006,PhD Candidate D006C,9.0,PhD,TRUE,
+AE24D017,PhD Candidate D017,8.9,PhD,TRUE,
+AE25D015,PhD Candidate D015,8.8,PhD,TRUE,
+AE25M011,MS Candidate M011,8.6,MS,TRUE,
+AE25M044,MS Candidate M044,8.5,MS,TRUE,
+AE23D203,PhD Candidate D203B,9.1,PhD,TRUE

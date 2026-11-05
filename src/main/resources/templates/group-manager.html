@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="'Manage Group ' + ${groupId} + ' • TA Allocator'">Manage Group • TA Allocator</title>
+    <title th:text="'Manage Group ' + ${(groupId == T(java.lang.Math).floor(groupId)) ? T(java.lang.Math).round(groupId) : groupId} + ' • TA Allocator'">Manage Group • TA Allocator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -391,6 +391,51 @@
             font-size: 0.8rem;
             font-style: italic;
         }
+
+        .btn-unassign {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            line-height: 1.3;
+        }
+
+        .btn-unassign:hover {
+            background-color: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
+            transform: translateY(-1px);
+        }
+
+        .btn-swap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+            padding: 2px 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            height: 24px;
+        }
+
+        .btn-swap:hover {
+            background-color: #6366f1;
+            color: #ffffff;
+            border-color: #6366f1;
+        }
     </style>
 </head>
 <body>
@@ -399,12 +444,9 @@
         <div class="header-container">
             <div>
                 <a href="/" class="nav-back">← Back to Dashboard</a>
-                <h1 class="page-title" th:text="'Course Group ' + ${groupId} + ' Command Center'">Manage Group</h1>
+                <h1 class="page-title" th:text="'Course Group ' + ${(groupId == T(java.lang.Math).floor(groupId)) ? T(java.lang.Math).round(groupId) : groupId} + ' Command Center'">Manage Group</h1>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <a th:href="@{/preferences/submit}" class="btn" style="background:#4f46e5; color:#ffffff; font-weight:600; text-decoration:none; padding:8px 14px; border-radius:6px; font-size:0.85rem;">
-                    <span>📝</span> In-App Preference Portal
-                </a>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <a th:href="@{/export/results(groupId=${groupId})}" class="btn btn-success" style="width: auto; padding: 8px 16px;">
                     <span>📥</span> Export Group CSV
                 </a>
@@ -449,7 +491,7 @@
                     <h3 class="step-title">Collect Preferences</h3>
                     <p class="step-desc">Dispatches personalized emails to professors asking for 4 TA choices via Google Forms.</p>
                 </div>
-                <form method="POST" th:action="@{/group/send-preference-emails}">
+                <form method="POST" th:action="@{'/group/' + ${groupId} + '/send-pref-emails'}">
                     <input type="hidden" name="id" th:value="${groupId}" />
                     <div class="form-group">
                         <label class="form-label">Term</label>
@@ -457,16 +499,31 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Deadline</label>
-                        <input type="text" name="deadline" class="form-input" placeholder="e.g. 5:00 PM on Aug 8" required />
+                        <input type="text" name="deadlineDate" class="form-input" placeholder="e.g. 5:00 PM on Aug 8" required />
                     </div>
                     <div class="form-group">
                         <label class="form-label">Form Link</label>
-                        <input type="text" name="formLink" class="form-input" placeholder="https://forms.gle/..." required />
+                        <input type="text" name="formUrl" class="form-input" placeholder="https://forms.gle/..." required />
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Custom Note (Optional)</label>
-                        <input type="text" name="customNote" class="form-input" placeholder="e.g. Priority review requested by HOD..." />
-                    </div>
+                    <details open style="margin-bottom: 14px; font-size: 0.82rem; color: var(--text-muted);">
+                        <summary style="cursor: pointer; font-weight: 600; color: var(--primary); margin-bottom: 6px;">✉️ Email Message Body (Pre-written & Modifiable)</summary>
+                        <div class="form-group" style="margin-bottom: 6px;">
+                            <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px;">Pre-written template below is fully modifiable. Available dynamic tags: <code>{FACULTY_NAME}</code>, <code>{COURSE_NO}</code>, <code>{FORM_URL}</code>, <code>{DEADLINE}</code>.</p>
+                            <textarea name="customNote" class="form-input" rows="7" style="font-size: 0.76rem; font-family: inherit; line-height: 1.4; white-space: pre-wrap;">Dear Prof. {FACULTY_NAME},
+
+Please fill up the following form at the earliest to help with the TA allotment for the coming semester. You are set to teach {COURSE_NO} this semester.
+In the form, I am asking you to choose 4 preferences for each class that you are handling.
+{FORM_URL}
+
+While it will be convenient to have this done ASAP, I will wait till {DEADLINE} before I allot the TA and proceed.
+
+Best,
+Nidish Narayanaa Balaji
+Assistant Professor,
+Department of Aerospace Engineering,
+IIT Madras, Chennai 600036, IN</textarea>
+                        </div>
+                    </details>
                     <button type="submit" class="btn btn-primary">Send Request Emails</button>
                 </form>
             </div>
@@ -496,20 +553,19 @@
                     <h3 class="step-title">Execute Allocation</h3>
                     <p class="step-desc">Matches professor choices, checks availability locks, and caps assignment at max 2 TAs.</p>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <a th:href="@{/group/preview(id=${groupId})}" class="btn" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:600; text-align:center; text-decoration:none; padding:10px;">
-                        <span>🔍</span> Preview Matches (Dry Run)
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <a th:href="@{'/group/' + ${groupId} + '/preview-allocation'}" class="btn btn-indigo" style="font-size: 0.9rem; padding: 10px;">
+                        <span>👁️</span> Preview Allocation (Dry-Run)
                     </a>
                     <form method="POST" th:action="@{/group/allocate}">
                         <input type="hidden" name="id" th:value="${groupId}" />
-                        <button type="submit" class="btn btn-success" style="width:100%; font-size: 0.95rem; padding: 12px;">
+                        <button type="submit" class="btn btn-success" style="font-size: 0.95rem; padding: 11px;">
                             <span>⚡</span> Run Allocation Algorithm
                         </button>
                     </form>
-                    <form method="POST" th:action="@{/group/rollback}" onsubmit="return confirm('Undo all allocations for this group? All assigned students will be released back to the available pool.');">
-                        <input type="hidden" name="id" th:value="${groupId}" />
-                        <button type="submit" class="btn" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; width:100%; font-size:0.8rem; padding:8px; cursor:pointer;">
-                            <span>↩</span> Undo / Rollback Allocations
+                    <form method="POST" th:action="@{'/group/' + ${groupId} + '/rollback-allocation'}" onsubmit="return confirm('⚠️ Are you sure you want to rollback all allocations for Group ' + [[${(groupId == T(java.lang.Math).floor(groupId)) ? T(java.lang.Math).round(groupId) : groupId}]] + '?\n\nThis will clear all assigned TAs for this group and restore student availabilities.');">
+                        <button type="submit" class="btn" style="font-size: 0.85rem; padding: 8px; background-color: #fef2f2; color: #dc2626; border: 1px solid #fca5a5;">
+                            <span>↩️</span> Undo / Rollback Allocations
                         </button>
                     </form>
                 </div>
@@ -522,69 +578,78 @@
                     <h3 class="step-title">Send Confirmations</h3>
                     <p class="step-desc">Emails professors with their allotted TAs and directs TAs to schedule kickoff meetings.</p>
                 </div>
-                <form method="POST" th:action="@{/group/send-confirmation-emails}">
+                <form method="POST" th:action="@{'/group/' + ${groupId} + '/send-confirm-emails'}">
                     <input type="hidden" name="id" th:value="${groupId}" />
                     <div class="form-group">
-                        <label class="form-label">Term</label>
-                        <input type="text" name="term" class="form-input" placeholder="e.g. Jul-Nov 2026" required />
+                        <label class="form-label">Term / Heading</label>
+                        <input type="text" name="semesterHeading" class="form-input" placeholder="e.g. Jul-Nov 2026" required />
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Special Instructions (Optional)</label>
-                        <input type="text" name="customInstructions" class="form-input" placeholder="e.g. Kickoff meetings strictly before Friday 5 PM..." />
-                    </div>
+                    <details open style="margin-bottom: 14px; font-size: 0.82rem; color: var(--text-muted);">
+                        <summary style="cursor: pointer; font-weight: 600; color: #9333ea; margin-bottom: 6px;">✉️ Confirmation Email Body (Pre-written & Modifiable)</summary>
+                        <div class="form-group" style="margin-bottom: 6px;">
+                            <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px;">Pre-written template below is fully modifiable. Available dynamic tags: <code>{FACULTY_NAME}</code>, <code>{COURSE_NO}</code>, <code>{COURSE_NAME}</code>, <code>{SEMESTER_HEADING}</code>, <code>{TAS_LIST}</code>.</p>
+                            <textarea name="customInstructions" class="form-input" rows="7" style="font-size: 0.76rem; font-family: inherit; line-height: 1.4; white-space: pre-wrap;">Dear Prof. {FACULTY_NAME},
+
+This email is to confirm that the following TA(s) has(have) been allotted to assist you for the class {COURSE_NO} ({COURSE_NAME}), to be taught by you in the period {SEMESTER_HEADING}.
+{TAS_LIST}
+Please disregard any previous emails you may have received in this regard.
+Dear TAs, please make it a point to reach out to the course professor and schedule a kickoff meeting within the next two working days.
+
+Best,
+Nidish Narayanaa Balaji
+Assistant Professor,
+Department of Aerospace Engineering,
+IIT Madras, Chennai 600036, IN</textarea>
+                        </div>
+                    </details>
                     <button type="submit" class="btn btn-purple">Send Confirmation Emails</button>
                 </form>
             </div>
         </div>
 
         <!-- Simulated Allocation Preview Card (Feature 6) -->
-        <section class="table-card" th:if="${previewResults != null}" style="border: 2px solid #38bdf8; margin-bottom: 24px;">
-            <div class="table-header" style="background:#f0f9ff;">
+        <section th:if="${previewList != null}" class="table-card" style="margin-bottom: 32px; border-color: #93c5fd; background: #f0f9ff;">
+            <div class="table-header">
                 <div class="table-title-group">
-                    <h2 style="color:#0369a1;">🔍 Simulated Allocation Preview (Dry Run)</h2>
-                    <p style="color:#0284c7;">Review projected Kuhn-Munkres optimal matches. Database state is currently unchanged.</p>
+                    <h2 style="color: #1e40af;"><span>👁️</span> Simulated Allocation Preview (Dry Run — No Changes Saved)</h2>
+                    <p style="color: #1d4ed8;">Kuhn-Munkres matching computed non-destructively. Review matches before committing to database.</p>
                 </div>
-                <div class="table-actions">
-                    <form method="POST" th:action="@{/group/allocate}" style="display:inline;">
-                        <input type="hidden" name="id" th:value="${groupId}" />
-                        <button type="submit" class="btn btn-success" style="padding:10px 18px; font-weight:700;">
-                            ✓ Confirm &amp; Commit Allocation
-                        </button>
-                    </form>
-                </div>
+                <form method="POST" th:action="@{/group/allocate}">
+                    <input type="hidden" name="id" th:value="${groupId}" />
+                    <button type="submit" class="btn btn-success" style="width: auto; padding: 10px 20px;">
+                        <span>✅</span> Confirm & Commit Allocation
+                    </button>
+                </form>
             </div>
-            <div class="table-wrapper">
+
+            <div class="table-wrapper" style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid #bfdbfe;">
                 <table>
                     <thead>
                         <tr>
-                            <th>Course</th>
+                            <th>Course No</th>
+                            <th>Course Name</th>
                             <th>Instructor</th>
                             <th>Slot</th>
-                            <th>Matched TA</th>
+                            <th>Projected Matched TA</th>
                             <th>Preference Rank</th>
-                            <th>Match Weight</th>
+                            <th>Match Score</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="p : ${previewResults}">
-                            <td><span class="course-code-badge" th:text="${p.courseNo}">AS2100</span></td>
-                            <td th:text="${p.instructorName}">Instructor</td>
-                            <td th:text="'TA ' + ${p.slotNumber}">TA 1</td>
+                        <tr th:each="preview : ${previewList}">
+                            <td><span class="course-code-badge" th:text="${preview.courseNo}">AS2100</span></td>
+                            <td th:text="${preview.courseName}">Course</td>
+                            <td th:text="${preview.instructorName}">Instructor</td>
+                            <td th:text="'Slot ' + ${preview.slotNumber}">Slot 1</td>
                             <td>
-                                <span th:if="${p.matchedRollNo != 'Unassigned'}" class="ta-pill-assigned">
+                                <span th:if="${preview.matchedRollNo != 'Unassigned'}" class="ta-pill-assigned">
                                     <span class="ta-dot"></span>
-                                    <span th:text="${p.matchedRollNo + ' (' + p.matchedStudentName + ')'}">AE22B001</span>
+                                    <span th:text="${preview.matchedRollNo + ' (' + preview.matchedStudentName + ')'}">AE22B001</span>
                                 </span>
-                                <span th:unless="${p.matchedRollNo != 'Unassigned'}" class="ta-pill-none">
-                                    Unassigned
-                                </span>
+                                <span th:unless="${preview.matchedRollNo != 'Unassigned'}" class="ta-pill-none">Unassigned</span>
                             </td>
-                            <td>
-                                <span style="font-weight:600; font-size:0.85rem;" 
-                                      th:style="${p.preferenceRank.contains('Choice 1') ? 'color:#16a34a;' : (p.preferenceRank.contains('Choice 2') ? 'color:#2563eb;' : 'color:#4b5563;')}"
-                                      th:text="${p.preferenceRank}">Choice 1</span>
-                            </td>
-                            <td th:text="${#numbers.formatDecimal(p.matchScore, 1, 1)}">10000.0</td>
+                            <td><span th:text="${preview.preferenceRank}">Choice 1</span></td>
+                            <td th:text="${#numbers.formatDecimal(preview.matchScore, 1, 1)}">10000.0</td>
                         </tr>
                     </tbody>
                 </table>
@@ -595,7 +660,7 @@
         <section class="table-card">
             <div class="table-header">
                 <div class="table-title-group">
-                    <h2>Courses in Group <span th:text="${groupId}"></span></h2>
+                    <h2>Courses in Group <span th:text="${(groupId == T(java.lang.Math).floor(groupId)) ? T(java.lang.Math).round(groupId) : groupId}"></span></h2>
                     <p>Review current TA assignments and instructor details.</p>
                 </div>
                 <div class="table-actions">
@@ -622,74 +687,74 @@
                             <td th:text="${course.courseName}" style="font-weight: 500;">Course Title</td>
                             <td th:text="${course.instructorName}">Instructor Name</td>
                             <td>
-                                <div>
-                                    <span th:if="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}" 
-                                          class="ta-pill-assigned">
-                                        <span class="ta-dot"></span>
-                                        <span th:text="${course.ta1}">AE22B001</span>
-                                        <form method="POST" th:action="@{/group/unassign}" style="display:inline; margin-left:4px;"
-                                              onsubmit="return confirm('Unassign this TA from Slot 1?');">
-                                            <input type="hidden" name="id" th:value="${groupId}" />
-                                            <input type="hidden" name="courseNo" th:value="${course.courseNo}" />
+                                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                                    <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                        <span th:if="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}" 
+                                              class="ta-pill-assigned">
+                                            <span class="ta-dot"></span>
+                                            <span th:text="${course.ta1}">AE22B001</span>
+                                        </span>
+                                        <form th:if="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}"
+                                              method="POST" 
+                                              th:action="@{'/group/' + ${groupId} + '/unassign'}" 
+                                              style="display: inline; margin: 0;">
+                                            <input type="hidden" name="courseId" th:value="${course.id}" />
                                             <input type="hidden" name="slot" value="1" />
-                                            <button type="submit" style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; border-radius:4px; font-size:0.7rem; padding:1px 4px; cursor:pointer;" title="Unassign">✕</button>
+                                            <button type="submit" class="btn-unassign" title="Unassign TA 1">Unassign</button>
                                         </form>
-                                    </span>
-                                    <span th:unless="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}" 
-                                          class="ta-pill-none">
-                                        Unassigned
-                                    </span>
-                                </div>
-                                <details style="margin-top:4px;">
-                                    <summary style="cursor:pointer; font-size:0.75rem; color:#4f46e5;" title="Override Slot 1">✎ Assign / Override</summary>
-                                    <form method="POST" th:action="@{/group/override-ta}" style="display:inline-flex; gap:3px; margin-top:3px;">
-                                        <input type="hidden" name="id" th:value="${groupId}" />
-                                        <input type="hidden" name="courseNo" th:value="${course.courseNo}" />
+                                        <span th:unless="${course.ta1 != null and !course.ta1.isEmpty() and !course.ta1.equalsIgnoreCase('xxxx')}" 
+                                              class="ta-pill-none">
+                                            Unassigned
+                                        </span>
+                                    </div>
+                                    <form method="POST" th:action="@{'/group/' + ${groupId} + '/override-ta'}" style="display: inline-flex; align-items: center; gap: 4px;">
+                                        <input type="hidden" name="courseId" th:value="${course.id}" />
                                         <input type="hidden" name="slot" value="1" />
-                                        <select name="newRollNo" style="font-size:0.72rem; padding:1px 4px; border-radius:4px; border:1px solid #cbd5e1; max-width:140px;">
-                                            <option value="NONE">-- Clear Slot --</option>
-                                            <option th:each="st : ${availableStudents}" 
-                                                    th:value="${st.rollNo}" 
-                                                    th:text="${st.rollNo + ': ' + st.name}"></option>
+                                        <select name="newRollNo" class="form-select" style="font-size: 0.72rem; padding: 2px 4px; height: 24px; min-width: 130px; width: auto;" required>
+                                            <option value="">-- Override TA --</option>
+                                            <option value="NONE">Clear Slot (None)</option>
+                                            <th:block th:if="${availableStudents != null}">
+                                                <option th:each="st : ${availableStudents}" th:value="${st.rollNo}" th:text="${st.rollNo + ' - ' + st.name}"></option>
+                                            </th:block>
                                         </select>
-                                        <button type="submit" style="background:#4f46e5; color:#fff; border:none; border-radius:4px; font-size:0.72rem; padding:1px 5px; cursor:pointer;">Set</button>
+                                        <button type="submit" class="btn-swap" title="Apply TA Override">Swap</button>
                                     </form>
-                                </details>
+                                </div>
                             </td>
                             <td>
-                                <div>
-                                    <span th:if="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}" 
-                                          class="ta-pill-assigned">
-                                        <span class="ta-dot"></span>
-                                        <span th:text="${course.ta2}">AE22B002</span>
-                                        <form method="POST" th:action="@{/group/unassign}" style="display:inline; margin-left:4px;"
-                                              onsubmit="return confirm('Unassign this TA from Slot 2?');">
-                                            <input type="hidden" name="id" th:value="${groupId}" />
-                                            <input type="hidden" name="courseNo" th:value="${course.courseNo}" />
+                                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                                    <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                        <span th:if="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}" 
+                                              class="ta-pill-assigned">
+                                            <span class="ta-dot"></span>
+                                            <span th:text="${course.ta2}">AE22B002</span>
+                                        </span>
+                                        <form th:if="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}"
+                                              method="POST" 
+                                              th:action="@{'/group/' + ${groupId} + '/unassign'}" 
+                                              style="display: inline; margin: 0;">
+                                            <input type="hidden" name="courseId" th:value="${course.id}" />
                                             <input type="hidden" name="slot" value="2" />
-                                            <button type="submit" style="background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; border-radius:4px; font-size:0.7rem; padding:1px 4px; cursor:pointer;" title="Unassign">✕</button>
+                                            <button type="submit" class="btn-unassign" title="Unassign TA 2">Unassign</button>
                                         </form>
-                                    </span>
-                                    <span th:unless="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}" 
-                                          class="ta-pill-none">
-                                        Unassigned
-                                    </span>
-                                </div>
-                                <details style="margin-top:4px;">
-                                    <summary style="cursor:pointer; font-size:0.75rem; color:#4f46e5;" title="Override Slot 2">✎ Assign / Override</summary>
-                                    <form method="POST" th:action="@{/group/override-ta}" style="display:inline-flex; gap:3px; margin-top:3px;">
-                                        <input type="hidden" name="id" th:value="${groupId}" />
-                                        <input type="hidden" name="courseNo" th:value="${course.courseNo}" />
+                                        <span th:unless="${course.ta2 != null and !course.ta2.isEmpty() and !course.ta2.equalsIgnoreCase('xxxx')}" 
+                                              class="ta-pill-none">
+                                            Unassigned
+                                        </span>
+                                    </div>
+                                    <form method="POST" th:action="@{'/group/' + ${groupId} + '/override-ta'}" style="display: inline-flex; align-items: center; gap: 4px;">
+                                        <input type="hidden" name="courseId" th:value="${course.id}" />
                                         <input type="hidden" name="slot" value="2" />
-                                        <select name="newRollNo" style="font-size:0.72rem; padding:1px 4px; border-radius:4px; border:1px solid #cbd5e1; max-width:140px;">
-                                            <option value="NONE">-- Clear Slot --</option>
-                                            <option th:each="st : ${availableStudents}" 
-                                                    th:value="${st.rollNo}" 
-                                                    th:text="${st.rollNo + ': ' + st.name}"></option>
+                                        <select name="newRollNo" class="form-select" style="font-size: 0.72rem; padding: 2px 4px; height: 24px; min-width: 130px; width: auto;" required>
+                                            <option value="">-- Override TA --</option>
+                                            <option value="NONE">Clear Slot (None)</option>
+                                            <th:block th:if="${availableStudents != null}">
+                                                <option th:each="st : ${availableStudents}" th:value="${st.rollNo}" th:text="${st.rollNo + ' - ' + st.name}"></option>
+                                            </th:block>
                                         </select>
-                                        <button type="submit" style="background:#4f46e5; color:#fff; border:none; border-radius:4px; font-size:0.72rem; padding:1px 5px; cursor:pointer;">Set</button>
+                                        <button type="submit" class="btn-swap" title="Apply TA Override">Swap</button>
                                     </form>
-                                </details>
+                                </div>
                             </td>
                         </tr>
                     </tbody>

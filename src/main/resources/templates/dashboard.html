@@ -446,10 +446,7 @@
                 <div class="brand-subtitle">Department of Aerospace Engineering • IIT Madras</div>
                 <h1 class="brand-title">Teaching Assistant Allocator</h1>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <a th:href="@{/preferences/submit}" class="btn" style="background:#4f46e5; color:#ffffff; font-weight:600; text-decoration:none; padding:8px 14px; border-radius:8px; font-size:0.85rem; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);">
-                    <span>📝</span> Faculty Preference Portal
-                </a>
+            <div style="display: flex; align-items: center; gap: 12px;">
                 <div class="status-badge">
                     <span class="status-dot"></span>
                     <span>Persistent DB Active</span>
@@ -584,7 +581,7 @@
             <div th:if="${not #lists.isEmpty(groupIds)}" class="groups-grid">
                 <a th:each="id : ${groupIds}" th:href="@{/group(id=${id})}" class="group-card">
                     <div>
-                        <div class="group-title" th:text="'Course Group ' + ${id}">Group 0</div>
+                        <div class="group-title" th:text="'Course Group ' + ${(id == T(java.lang.Math).floor(id)) ? T(java.lang.Math).round(id) : id}">Course Group 1</div>
                         <div class="group-hint">Click to manage pipeline & TAs</div>
                     </div>
                     <div class="arrow-badge">→</div>

@@ -23,8 +23,30 @@ public class Course {
     private String column1;
     private String column2;
     private String column3;
+    
+    private Long id;
 
     // Getters and Setters
+    public Long getId() {
+        if (id != null) return id;
+        if (courseNo != null) {
+            String digits = courseNo.replaceAll("\\D+", "");
+            if (!digits.isEmpty()) {
+                try {
+                    return Long.parseLong(digits);
+                } catch (NumberFormatException ignored) {}
+            }
+            return (long) Math.abs(courseNo.hashCode());
+        }
+        return null;
+    }
+    public void setId(Long id) { this.id = id; }
+
+    public String getAssignedTa1() { return ta1; }
+    public void setAssignedTa1(String assignedTa1) { this.ta1 = assignedTa1; }
+    public String getAssignedTa2() { return ta2; }
+    public void setAssignedTa2(String assignedTa2) { this.ta2 = assignedTa2; }
+
     public String getFacultyEmail() { return facultyEmail; }
     public void setFacultyEmail(String facultyEmail) { this.facultyEmail = facultyEmail; }
     public String getCourseNo() { return courseNo; }
