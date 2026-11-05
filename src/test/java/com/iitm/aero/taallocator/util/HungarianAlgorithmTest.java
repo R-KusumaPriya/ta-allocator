@@ -53,4 +53,64 @@ public class HungarianAlgorithmTest {
         assertEquals(1, match[1]); // Slot 1 -> Student 1
         assertEquals(-1, match[2]); // Slot 2 unmatched
     }
+
+    @Test
+    public void testEmptyMatrix() {
+        double[][] weights = new double[0][0];
+        int[] match = HungarianAlgorithm.findMaxWeightMatching(weights);
+        assertNotNull(match);
+        assertEquals(0, match.length);
+    }
+
+    @Test
+    public void testZeroStudentsAvailable() {
+        double[][] weights = new double[3][0];
+        int[] match = HungarianAlgorithm.findMaxWeightMatching(weights);
+        assertNotNull(match);
+        assertEquals(3, match.length);
+        assertEquals(-1, match[0]);
+        assertEquals(-1, match[1]);
+        assertEquals(-1, match[2]);
+    }
+
+    @Test
+    public void testAllZeroWeights_NoMatchPossible() {
+        double[][] weights = {
+            { 0.0, 0.0 },
+            { 0.0, 0.0 }
+        };
+        int[] match = HungarianAlgorithm.findMaxWeightMatching(weights);
+        assertNotNull(match);
+        assertEquals(2, match.length);
+        assertEquals(-1, match[0]);
+        assertEquals(-1, match[1]);
+    }
+
+    @Test
+    public void testMoreStudentsThanSlots() {
+        // 2 slots, 4 students
+        // Slot 0 weights: [10.0, 40.0, 20.0, 5.0]
+        // Slot 1 weights: [5.0,  15.0, 50.0, 25.0]
+        // Best sum: Slot 0 -> Student 1 (40.0), Slot 1 -> Student 2 (50.0) = 90.0
+        double[][] weights = {
+            { 10.0, 40.0, 20.0, 5.0 },
+            { 5.0,  15.0, 50.0, 25.0 }
+        };
+
+        int[] match = HungarianAlgorithm.findMaxWeightMatching(weights);
+        assertNotNull(match);
+        assertEquals(2, match.length);
+        assertEquals(1, match[0]); // Slot 0 -> Student 1
+        assertEquals(2, match[1]); // Slot 1 -> Student 2
+        assertEquals(90.0, weights[0][match[0]] + weights[1][match[1]]);
+    }
+
+    @Test
+    public void testSingleSlotAndStudent() {
+        double[][] weights = { { 50.0 } };
+        int[] match = HungarianAlgorithm.findMaxWeightMatching(weights);
+        assertNotNull(match);
+        assertEquals(1, match.length);
+        assertEquals(0, match[0]);
+    }
 }

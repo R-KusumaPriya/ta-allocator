@@ -725,3 +725,42 @@ Add missing defensive and boundary unit tests to DataUploadServiceTest.java:
 5. OUTPUT FORMAT & VERIFICATION:
 - Provide the updated DataUploadServiceTest.java.
 - Verify that all tests pass with .\mvnw.cmd test -Dtest=DataUploadServiceTest.
+---
+
+### Prompt 37: Edge-Case & Algorithmic Unit Tests for HungarianAlgorithm
+You are an algorithm specialist and Java 17 engineer working on the ta-allocator codebase.
+
+1. CONTEXT & FILE LOCATIONS:
+- Target Test File:
+  * src/test/java/com/iitm/aero/taallocator/util/HungarianAlgorithmTest.java
+- Source File:
+  * src/main/java/com/iitm/aero/taallocator/util/HungarianAlgorithm.java
+- Technologies: JUnit 5, pure Java 17.
+
+2. TASK / NEW REQUIREMENT:
+Expand HungarianAlgorithmTest.java with boundary and degenerate matrix tests:
+1. testEmptyMatrix():
+   - double[][] weights = new double[0][0];
+   - Assert returns int[0].
+2. testZeroStudentsAvailable():
+   - double[][] weights = new double[3][0];
+   - Assert returns int[3] with all values set to -1.
+3. testAllZeroWeights_NoMatchPossible():
+   - double[][] weights = { { 0.0, 0.0 }, { 0.0, 0.0 } };
+   - Assert returns [-1, -1] because no positive satisfaction edge exists.
+4. testMoreStudentsThanSlots():
+   - 2 slots, 4 students with varying preference weights.
+   - Assert optimal matching selects the top two students with the maximum sum.
+5. testSingleSlotAndStudent():
+   - double[][] weights = { { 50.0 } };
+   - Assert match[0] == 0.
+
+3. HARD CONSTRAINTS:
+- Pure Java 17; no external graph or math dependencies.
+
+4. DEFENSIVE INVARIANTS:
+- The algorithm must never throw ArrayIndexOutOfBoundsException or infinite loops on empty, degenerate, or non-square matrices.
+
+5. OUTPUT FORMAT & VERIFICATION:
+- Provide the updated HungarianAlgorithmTest.java.
+- Verify with .\mvnw.cmd test -Dtest=HungarianAlgorithmTest.

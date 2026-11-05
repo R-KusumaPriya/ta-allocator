@@ -29,6 +29,10 @@ public class EmailService {
     @Autowired
     private StudentRepository studentRepository;
 
+    public String sendPreferenceRequestEmails(double groupId, String formUrl, String deadlineDate, String customNote) {
+        return sendPreferenceEmails(groupId, "Coming Semester", deadlineDate, formUrl, customNote);
+    }
+
     public String sendPreferenceEmails(double groupId, String termString, String deadline, String formLink) {
         return sendPreferenceEmails(groupId, termString, deadline, formLink, null);
     }
@@ -52,16 +56,29 @@ public class EmailService {
             String fname = toCapitalCase(course.getInstructorName() != null ? course.getInstructorName() : "Colleague");
             String sub = termString + " TA Allotment Group " + groupId + " - " + course.getCourseNo();
             
-            String msg = "Dear Prof. " + fname + ",\n\n" +
-                    "Please fill up the following form at the earliest to help with the TA allotment for the coming semester. You are set to teach " +
-                    course.getCourseNo() + " this semester.\n" +
-                    "In the form, I am asking you to choose 4 preferences for each class that you are handling.\n" +
-                    formLink + " \n\n" +
-                    "While it will be convenient to have this done ASAP, I will wait till " +
-                    deadline + " before I allot the TA and proceed.\n\n" +
-                    (customNote != null && !customNote.trim().isEmpty() ? "Note from Coordinator:\n" + customNote.trim() + "\n\n" : "") +
-                    "Best,\nNidish Narayanaa Balaji\nAssistant Professor,\n" +
-                    "Department of Aerospace Engineering,\nIIT Madras, Chennai 600036, IN";
+            String msg;
+            if (customNote != null && (customNote.contains("{") || customNote.contains("Dear Prof.") || customNote.length() > 100)) {
+                msg = customNote
+                        .replace("{FACULTY_NAME}", fname)
+                        .replace("{COURSE_NO}", course.getCourseNo())
+                        .replace("{FORM_URL}", formLink)
+                        .replace("{DEADLINE}", deadline);
+            } else {
+                String noteSection = (customNote != null && !customNote.trim().isEmpty())
+                        ? "\n\nNote: " + customNote.trim()
+                        : "";
+
+                msg = "Dear Prof. " + fname + ",\n\n" +
+                        "Please fill up the following form at the earliest to help with the TA allotment for the coming semester. You are set to teach " +
+                        course.getCourseNo() + " this semester.\n" +
+                        "In the form, I am asking you to choose 4 preferences for each class that you are handling.\n" +
+                        formLink + " \n\n" +
+                        "While it will be convenient to have this done ASAP, I will wait till " +
+                        deadline + " before I allot the TA and proceed." +
+                        noteSection + "\n\n" +
+                        "Best,\nNidish Narayanaa Balaji\nAssistant Professor,\n" +
+                        "Department of Aerospace Engineering,\nIIT Madras, Chennai 600036, IN";
+            }
             
             String err = sendEmail(email, sub, msg, null);
             if (err == null) {
@@ -78,7 +95,7 @@ public class EmailService {
         return sendConfirmationEmails(groupId, termString, null);
     }
 
-    public String sendConfirmationEmails(double groupId, String termString, String customInstructions) {
+    public String sendConfirmationEmails(double groupId, String semesterHeading, String customInstructions) {
         List<Course> courses = courseRepository.findByGroupId(groupId);
         if (courses.isEmpty()) {
             return "No courses found for Group ID: " + groupId;
@@ -108,20 +125,34 @@ public class EmailService {
             }
             
             String fname = toCapitalCase(course.getInstructorName() != null ? course.getInstructorName() : "Colleague");
-            String sub = course.getCourseNo() + " " + termString + " TA Allotment Confirmation";
+            String sub = course.getCourseNo() + " " + semesterHeading + " TA Allotment Confirmation";
             
-            String msg = "Dear Prof. " + fname + ",\n\n" +
-                    "This email is to confirm that the following TA(s) has(have) " +
-                    "been allotted to assist you for the class " +
-                    course.getCourseNo() + " (" + course.getCourseName() + "), to be taught by you in the period " +
-                    termString + ".\n" +
-                    tasList.toString() +
-                    "\nPlease disregard any previous emails you may have received in this regard.\n" +
-                    "Dear TAs, please make it a point to reach out to the course professor and " +
-                    "schedule a kickoff meeting within the next two working days.\n\n" +
-                    (customInstructions != null && !customInstructions.trim().isEmpty() ? "Special Instructions:\n" + customInstructions.trim() + "\n\n" : "") +
-                    "Best,\nNidish Narayanaa Balaji\nAssistant Professor,\n" +
-                    "Department of Aerospace Engineering,\nIIT Madras, Chennai 600036, IN";
+            String msg;
+            if (customInstructions != null && (customInstructions.contains("{") || customInstructions.contains("Dear Prof.") || customInstructions.length() > 100)) {
+                msg = customInstructions
+                        .replace("{FACULTY_NAME}", fname)
+                        .replace("{COURSE_NO}", course.getCourseNo())
+                        .replace("{COURSE_NAME}", course.getCourseName() != null ? course.getCourseName() : "")
+                        .replace("{SEMESTER_HEADING}", semesterHeading)
+                        .replace("{TAS_LIST}", tasList.toString());
+            } else {
+                String instructionsSection = (customInstructions != null && !customInstructions.trim().isEmpty())
+                        ? "\n\nAdditional Instructions: " + customInstructions.trim()
+                        : "";
+
+                msg = "Dear Prof. " + fname + ",\n\n" +
+                        "This email is to confirm that the following TA(s) has(have) " +
+                        "been allotted to assist you for the class " +
+                        course.getCourseNo() + " (" + course.getCourseName() + "), to be taught by you in the period " +
+                        semesterHeading + ".\n" +
+                        tasList.toString() +
+                        "\nPlease disregard any previous emails you may have received in this regard.\n" +
+                        "Dear TAs, please make it a point to reach out to the course professor and " +
+                        "schedule a kickoff meeting within the next two working days." +
+                        instructionsSection + "\n\n" +
+                        "Best,\nNidish Narayanaa Balaji\nAssistant Professor,\n" +
+                        "Department of Aerospace Engineering,\nIIT Madras, Chennai 600036, IN";
+            }
             
             // CC emails disabled during testing to prevent emailing student roll numbers
             String err = sendEmail(email, sub, msg, null);

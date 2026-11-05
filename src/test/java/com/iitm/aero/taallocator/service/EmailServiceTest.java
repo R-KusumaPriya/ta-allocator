@@ -218,30 +218,42 @@ public class EmailServiceTest {
     }
 
     @Test
-    void testSendPreferenceEmails_WithCustomNote() {
+    void testCustomDeadlineAndNoteInjection() {
+        // Arrange
         when(courseRepository.findByGroupId(1.0)).thenReturn(Collections.singletonList(course));
         when(facultyRepository.findByNameIgnoreCase("Dr. Bharath G")).thenReturn(faculty);
 
-        String result = emailService.sendPreferenceEmails(1.0, "Jul-Nov 2026", "Aug 10", "https://forms.gle/xyz", "Urgent deadline please respond.");
+        // Act
+        String result = emailService.sendPreferenceRequestEmails(1.0, "https://forms.gle/xyz", "5:00 PM on Aug 15", "Please prioritize Ph.D. scholars.");
 
+        // Assert
         assertTrue(result.contains("1/1 sent"));
         ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-        assertTrue(captor.getValue().getText().contains("Urgent deadline please respond."));
+        verify(mailSender, times(1)).send(captor.capture());
+
+        SimpleMailMessage sentMsg = captor.getValue();
+        assertEquals("bharath@aerospace.iitm.ac.in", sentMsg.getTo()[0]);
+        assertTrue(sentMsg.getText().contains("5:00 PM on Aug 15"));
+        assertTrue(sentMsg.getText().contains("Note: Please prioritize Ph.D. scholars."));
     }
 
     @Test
-    void testSendConfirmationEmails_WithCustomInstructions() {
-        course.setTa1("AE22B001");
+    void testPrewrittenModifiableEmailBody() {
+        // Arrange
         when(courseRepository.findByGroupId(1.0)).thenReturn(Collections.singletonList(course));
         when(facultyRepository.findByNameIgnoreCase("Dr. Bharath G")).thenReturn(faculty);
-        when(studentRepository.findById("AE22B001")).thenReturn(Optional.of(ta1));
 
-        String result = emailService.sendConfirmationEmails(1.0, "Jul-Nov 2026", "Strictly in-person meetings.");
+        String userModifiedTemplate = "Greetings Prof. {FACULTY_NAME},\n\nPlease submit form: {FORM_URL} by {DEADLINE} for course {COURSE_NO}.\nThank you!";
 
-        assertTrue(result.contains("1 sent"));
+        // Act
+        String result = emailService.sendPreferenceRequestEmails(1.0, "https://forms.gle/xyz", "Friday 5 PM", userModifiedTemplate);
+
+        // Assert
+        assertTrue(result.contains("1/1 sent"));
         ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-        assertTrue(captor.getValue().getText().contains("Strictly in-person meetings."));
+        verify(mailSender, times(1)).send(captor.capture());
+
+        SimpleMailMessage sentMsg = captor.getValue();
+        assertEquals("Greetings Prof. Dr. Bharath G,\n\nPlease submit form: https://forms.gle/xyz by Friday 5 PM for course AS2100.\nThank you!", sentMsg.getText());
     }
 }
