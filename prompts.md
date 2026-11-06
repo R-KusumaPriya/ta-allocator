@@ -723,3 +723,31 @@ Expand HungarianAlgorithmTest.java with boundary and degenerate matrix tests:
 5. OUTPUT FORMAT & VERIFICATION:
 - Provide the updated HungarianAlgorithmTest.java.
 - Verify with .\mvnw.cmd test -Dtest=HungarianAlgorithmTest.
+
+---
+
+### Prompt 37: Two-Way State Synchronization for CSV Ingestion in DataUploadService
+You are a senior Java 17 and Spring Data JPA developer working on the ta-allocator project.
+
+1. CONTEXT & PROBLEM:
+- Ingestion Source: src/main/java/com/iitm/aero/taallocator/service/DataUploadService.java
+- Tests: src/test/java/com/iitm/aero/taallocator/service/DataUploadServiceTest.java
+- When coordinators upload a courses.csv that already contains assigned TA roll numbers in TA 1 or TA 2, the corresponding Student records in the database must be automatically synchronized to set isAvailable = false and course = courseNo.
+- Conversely, when coordinators upload or reload students.csv after courses are already loaded with assignments, those students should not be erroneously reset to isAvailable = true if they are already assigned to a course slot.
+
+2. REQUIREMENTS:
+- In parseAndSaveCourses(MultipartFile):
+  * After persisting courses, scan each course's assignedTa1 and assignedTa2.
+  * Extract roll number (handling "ROLL: Name" format and invalid placeholders) and update Student.setAvailable(false) and Student.setCourse(courseNo).
+- In parseAndSaveStudents(MultipartFile):
+  * Before saving students, inspect all existing courses in courseRepository.findAll().
+  * If a student's roll number is found assigned to an active course slot, set Student.setAvailable(false) and Student.setCourse(assignedCourse).
+- Add comprehensive unit tests in DataUploadServiceTest.java verifying two-way synchronization during course and student uploads.
+
+3. DEFENSIVE INVARIANTS:
+- Handle null, blank, and invalid placeholders ("-", "N/A", "null") safely without throwing NullPointerExceptions.
+- Case-insensitive roll number matching with uppercase normalization.
+
+4. OUTPUT FORMAT & VERIFICATION:
+- Provide the updated DataUploadService.java and DataUploadServiceTest.java.
+- Verify that all tests pass with .\mvnw.cmd test -Dtest=DataUploadServiceTest.

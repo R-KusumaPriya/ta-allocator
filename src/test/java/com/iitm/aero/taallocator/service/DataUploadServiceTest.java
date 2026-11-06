@@ -18,6 +18,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -403,5 +404,72 @@ public class DataUploadServiceTest {
         String[] lines = csvOutput.split("\\r?\\n");
         assertEquals(2, lines.length, "Output should contain header and 1 course row");
         assertEquals("\"AS5570\",\"Flight Mechanics\",\"Dr. Rao\",\"rao@iitm.ac.in\",\"1\",\"1.0\",\"-\",\"-\",\"-\",\"-\"", lines[1]);
+    }
+
+    @Test
+    void testParseAndSaveCourses_SyncsAssignedStudentsAvailability() throws Exception {
+        String csv = "Course No,Course Name,Instructor,Faculty Email,Priority,Group ID,TA 1,TA 2\n" +
+                     "AS5570,Flight Mechanics,Dr. Rao,rao@iitm.ac.in,1,1.0,AE22B001: John,AE22B002\n";
+        MockMultipartFile file = new MockMultipartFile("file", "courses.csv", "text/csv", csv.getBytes());
+
+        Student s1 = new Student();
+        s1.setRollNo("AE22B001");
+        s1.setName("John");
+        s1.setCgpa("9.0");
+        s1.setProgram("B.Tech");
+        s1.setAvailable(true);
+
+        Student s2 = new Student();
+        s2.setRollNo("AE22B002");
+        s2.setName("Jane");
+        s2.setCgpa("8.8");
+        s2.setProgram("M.Tech");
+        s2.setAvailable(true);
+
+        when(studentRepository.findByRollNoIgnoreCase("AE22B001")).thenReturn(Optional.of(s1));
+        when(studentRepository.findByRollNoIgnoreCase("AE22B002")).thenReturn(Optional.of(s2));
+
+        dataUploadService.parseAndSaveCourses(file);
+
+        assertFalse(s1.isAvailable(), "Student 1 should be marked unavailable");
+        assertEquals("AS5570", s1.getCourse());
+        assertFalse(s2.isAvailable(), "Student 2 should be marked unavailable");
+        assertEquals("AS5570", s2.getCourse());
+        verify(studentRepository).save(s1);
+        verify(studentRepository).save(s2);
+    }
+
+    @Test
+    void testParseAndSaveStudents_RespectsExistingCourseAssignments() throws Exception {
+        Course existingCourse = new Course();
+        existingCourse.setCourseNo("AS5570");
+        existingCourse.setTa1("AE22B001: John");
+        existingCourse.setTa2(null);
+
+        when(courseRepository.findAll()).thenReturn(Collections.singletonList(existingCourse));
+
+        String csv = "Roll No,Name,CGPA,Program,Available,Course\n" +
+                     "AE22B001,John,9.0,B.Tech,true,-\n" +
+                     "AE22B002,Jane,8.5,B.Tech,true,-\n";
+        MockMultipartFile file = new MockMultipartFile("file", "students.csv", "text/csv", csv.getBytes());
+
+        dataUploadService.parseAndSaveStudents(file);
+
+        @SuppressWarnings("unchecked")
+        org.mockito.ArgumentCaptor<List<Student>> captor = org.mockito.ArgumentCaptor.forClass(List.class);
+        verify(studentRepository).saveAll(captor.capture());
+
+        List<Student> saved = captor.getValue();
+        assertEquals(2, saved.size());
+
+        Student s1 = saved.stream().filter(s -> s.getRollNo().equals("AE22B001")).findFirst().orElse(null);
+        Student s2 = saved.stream().filter(s -> s.getRollNo().equals("AE22B002")).findFirst().orElse(null);
+
+        assertNotNull(s1);
+        assertFalse(s1.isAvailable(), "Assigned student should have available=false");
+        assertEquals("AS5570", s1.getCourse());
+
+        assertNotNull(s2);
+        assertTrue(s2.isAvailable(), "Unassigned student should remain available=true");
     }
 }

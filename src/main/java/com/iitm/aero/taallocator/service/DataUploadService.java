@@ -105,6 +105,11 @@ public class DataUploadService {
             }
             courseRepository.deleteAll();
             courseRepository.saveAll(courses);
+
+            for (Course c : courses) {
+                markStudentAssignedFromCourse(c.getAssignedTa1(), c.getCourseNo());
+                markStudentAssignedFromCourse(c.getAssignedTa2(), c.getCourseNo());
+            }
         }
     }
 
@@ -170,6 +175,27 @@ public class DataUploadService {
                 
                 students.add(student);
             }
+
+            List<Course> existingCourses = courseRepository.findAll();
+            if (existingCourses != null && !existingCourses.isEmpty()) {
+                java.util.Map<String, String> assignedMap = new java.util.HashMap<>();
+                for (Course c : existingCourses) {
+                    if (c != null) {
+                        addAssignedMapping(assignedMap, c.getAssignedTa1(), c.getCourseNo());
+                        addAssignedMapping(assignedMap, c.getAssignedTa2(), c.getCourseNo());
+                    }
+                }
+                for (Student s : students) {
+                    if (s.getRollNo() != null) {
+                        String assignedCourse = assignedMap.get(s.getRollNo().trim().toUpperCase());
+                        if (assignedCourse != null) {
+                            s.setAvailable(false);
+                            s.setCourse(assignedCourse);
+                        }
+                    }
+                }
+            }
+
             studentRepository.deleteAll();
             studentRepository.saveAll(students);
         }
@@ -309,5 +335,36 @@ public class DataUploadService {
         return studentRepository.findById(rollNo.trim())
                 .map(Student::getName)
                 .orElse("-");
+    }
+
+    private void markStudentAssignedFromCourse(String assignedVal, String courseNo) {
+        if (assignedVal == null || assignedVal.trim().isEmpty() || isInvalidPlaceholder(assignedVal)) {
+            return;
+        }
+        String roll = assignedVal.trim();
+        if (roll.contains(":")) {
+            roll = roll.split(":", 2)[0].trim();
+        }
+        if (isInvalidPlaceholder(roll)) {
+            return;
+        }
+        studentRepository.findByRollNoIgnoreCase(roll).ifPresent(s -> {
+            s.setAvailable(false);
+            s.setCourse(courseNo);
+            studentRepository.save(s);
+        });
+    }
+
+    private void addAssignedMapping(java.util.Map<String, String> assignedMap, String assignedVal, String courseNo) {
+        if (assignedVal == null || assignedVal.trim().isEmpty() || isInvalidPlaceholder(assignedVal)) {
+            return;
+        }
+        String roll = assignedVal.trim();
+        if (roll.contains(":")) {
+            roll = roll.split(":", 2)[0].trim();
+        }
+        if (!isInvalidPlaceholder(roll)) {
+            assignedMap.put(roll.toUpperCase(), courseNo != null ? courseNo : "");
+        }
     }
 }
