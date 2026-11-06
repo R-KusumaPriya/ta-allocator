@@ -2,6 +2,7 @@ package com.iitm.aero.taallocator.controller;
 
 import com.iitm.aero.taallocator.dto.AllocationPreviewDto;
 import com.iitm.aero.taallocator.model.Course;
+import com.iitm.aero.taallocator.model.Student;
 import com.iitm.aero.taallocator.repository.CourseRepository;
 import com.iitm.aero.taallocator.repository.FacultyRepository;
 import com.iitm.aero.taallocator.repository.PreferenceRepository;
@@ -20,6 +21,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -426,5 +428,45 @@ public class AdminControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/group?id=1.0"))
                 .andExpect(flash().attributeExists("error"));
+    }
+
+    @Test
+    void testGroupManager_FiltersOutStudentsAssignedInCourses() throws Exception {
+        Course c1 = new Course();
+        c1.setCourseNo("AS1300");
+        c1.setTa1("AE22B001: John");
+        c1.setTa2(null);
+        c1.setGroupId(1.0);
+
+        Student s1 = new Student();
+        s1.setRollNo("AE22B001");
+        s1.setName("John");
+        s1.setAvailable(true); // marked available in student table but already assigned in course
+
+        Student s2 = new Student();
+        s2.setRollNo("AE22B002");
+        s2.setName("Jane");
+        s2.setAvailable(true);
+
+        when(courseRepository.findByGroupId(1.0)).thenReturn(Collections.singletonList(c1));
+        when(courseRepository.findAll()).thenReturn(Collections.singletonList(c1));
+        when(studentRepository.findByIsAvailableTrue()).thenReturn(Arrays.asList(s1, s2));
+
+        mockMvc.perform(get("/group").param("id", "1.0"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("availableStudents", org.hamcrest.Matchers.hasSize(1)))
+                .andExpect(model().attribute("availableStudents", org.hamcrest.Matchers.contains(s2)));
+    }
+
+    @Test
+    void testUpdateForm_ThrowableCaught_SetsFlashError() throws Exception {
+        when(googleFormsService.updateForm(1.0, "formErr")).thenThrow(new LinkageError("Native library issue"));
+
+        mockMvc.perform(post("/group/update-form")
+                        .param("id", "1.0")
+                        .param("formId", "formErr"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/group?id=1.0"))
+                .andExpect(flash().attribute("error", org.hamcrest.Matchers.containsString("Native library issue")));
     }
 }

@@ -2,6 +2,7 @@ package com.iitm.aero.taallocator.controller;
 
 import com.iitm.aero.taallocator.dto.AllocationPreviewDto;
 import com.iitm.aero.taallocator.model.Course;
+import com.iitm.aero.taallocator.model.Student;
 import com.iitm.aero.taallocator.repository.CourseRepository;
 import com.iitm.aero.taallocator.repository.StudentRepository;
 import com.iitm.aero.taallocator.service.AllocationService;
@@ -25,6 +26,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.beans.PropertyEditorSupport;
 
+import java.util.Collections;
 import java.util.List;
 
 @Controller
@@ -134,7 +136,7 @@ public class AdminController {
         List<Course> courses = courseRepository.findByGroupId(groupId);
         model.addAttribute("groupId", groupId);
         model.addAttribute("courses", courses);
-        model.addAttribute("availableStudents", studentRepository.findByIsAvailableTrue());
+        model.addAttribute("availableStudents", getUnassignedStudents());
         return "group-manager";
     }
 
@@ -149,7 +151,7 @@ public class AdminController {
         model.addAttribute("courses", courses);
         model.addAttribute("previewList", previewList);
         model.addAttribute("previewResults", previewList);
-        model.addAttribute("availableStudents", studentRepository.findByIsAvailableTrue());
+        model.addAttribute("availableStudents", getUnassignedStudents());
         return "group-manager";
     }
 
@@ -160,8 +162,8 @@ public class AdminController {
         try {
             String result = googleFormsService.updateForm(groupId, formId);
             redirectAttributes.addFlashAttribute("message", result);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error syncing Google Form: " + e.getMessage());
+        } catch (Throwable t) {
+            redirectAttributes.addFlashAttribute("error", "Error syncing Google Form: " + t.getMessage());
         }
         return "redirect:/group?id=" + groupId;
     }
@@ -349,5 +351,32 @@ public class AdminController {
         String filename = (groupId != null) ? "ta_allocations_group_" + groupId + ".csv" : "ta_allocations_all.csv";
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
         dataUploadService.exportAllocationsCsv(groupId, response.getWriter());
+    }
+
+    private List<Student> getUnassignedStudents() {
+        List<Course> allCourses = courseRepository.findAll();
+        java.util.Set<String> assignedRolls = new java.util.HashSet<>();
+        if (allCourses != null) {
+            for (Course c : allCourses) {
+                if (c != null) {
+                    addRollIfAssigned(assignedRolls, c.getAssignedTa1());
+                    addRollIfAssigned(assignedRolls, c.getAssignedTa2());
+                }
+            }
+        }
+        List<Student> availableInDb = studentRepository.findByIsAvailableTrue();
+        if (availableInDb == null) return Collections.emptyList();
+        return availableInDb.stream()
+                .filter(s -> s.getRollNo() != null && !assignedRolls.contains(s.getRollNo().trim().toUpperCase()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    private void addRollIfAssigned(java.util.Set<String> assignedRolls, String val) {
+        if (val == null || val.trim().isEmpty() || DataUploadService.isInvalidPlaceholder(val)) return;
+        String roll = val.trim();
+        if (roll.contains(":")) roll = roll.split(":", 2)[0].trim();
+        if (!DataUploadService.isInvalidPlaceholder(roll)) {
+            assignedRolls.add(roll.toUpperCase());
+        }
     }
 }

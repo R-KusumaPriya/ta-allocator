@@ -785,3 +785,31 @@ You are a full-stack Java 17 and Spring Boot developer working on the ta-allocat
 - Provide updated GoogleFormsService.java, group-manager.html, and GoogleFormsServiceTest.java.
 - Verify tests with .\mvnw.cmd test -Dtest=GoogleFormsServiceTest.
 
+---
+
+### Prompt 39: UI Dropdown Availability Validation and Defensive Error Handling in AdminController
+You are a Spring Boot 3 and web controller engineer working on the ta-allocator project.
+
+1. CONTEXT & PROBLEM:
+- Controller: src/main/java/com/iitm/aero/taallocator/controller/AdminController.java
+- Tests: src/test/java/com/iitm/aero/taallocator/controller/AdminControllerTest.java
+- In group-manager.html, the manual assignment override dropdown populates available students for Slot 1 and Slot 2. If a student is assigned to a course slot in the database but their isAvailable flag is desynchronized, they could appear in the override dropdown, allowing accidental double-booking.
+- In updateForm, runtime errors (such as missing Google API client libraries or credential linkage issues) could throw Throwable / Error subclasses that bypass standard catch (Exception e) blocks.
+
+2. REQUIREMENTS:
+- In AdminController.java:
+  * Add private helper getUnassignedStudents() that queries all courses across the entire database, gathers all currently assigned student roll numbers, and filters studentRepository.findByIsAvailableTrue() so only truly unassigned students are passed to the availableStudents model attribute in /group and /group/preview.
+  * In @PostMapping("/group/update-form"), broaden exception catching to catch (Throwable t) so all runtime errors and linkage errors are captured safely and rendered as user-facing flash error messages.
+- In AdminControllerTest.java:
+  * Add unit test testGroupManager_FiltersOutStudentsAssignedInCourses verifying that students assigned to existing course slots are excluded from availableStudents even if their flag was true.
+  * Add unit test testUpdateForm_ThrowableCaught_SetsFlashError asserting that Throwable errors are trapped and redirected with a flash error attribute.
+
+3. HARD CONSTRAINTS:
+- Keep controller isolated; do not introduce external libraries.
+- Maintain full compatibility with existing Thymeleaf model attributes and redirect routes.
+
+4. OUTPUT FORMAT & VERIFICATION:
+- Provide updated AdminController.java and AdminControllerTest.java.
+- Verify that all tests pass with .\mvnw.cmd test -Dtest=AdminControllerTest.
+
+
