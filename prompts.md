@@ -751,3 +751,37 @@ You are a senior Java 17 and Spring Data JPA developer working on the ta-allocat
 4. OUTPUT FORMAT & VERIFICATION:
 - Provide the updated DataUploadService.java and DataUploadServiceTest.java.
 - Verify that all tests pass with .\mvnw.cmd test -Dtest=DataUploadServiceTest.
+
+---
+
+### Prompt 38: Robust Google Forms Sync with URL Extraction and Strict Cross-Group Filtering
+You are a full-stack Java 17 and Spring Boot developer working on the ta-allocator project.
+
+1. CONTEXT & PROBLEM:
+- Service: src/main/java/com/iitm/aero/taallocator/service/GoogleFormsService.java
+- Template: src/main/resources/templates/group-manager.html
+- Tests: src/test/java/com/iitm/aero/taallocator/service/GoogleFormsServiceTest.java
+- Coordinators frequently paste the full Google Form URL (e.g. https://docs.google.com/forms/d/1lBtzLnnCZV.../edit or /viewform) rather than isolating the raw form ID string, leading to API failure.
+- In multi-round allocations, when syncing Google Form dropdowns for Group X, the system must publish courses for Group X and strictly exclude any students who are already allocated to courses across any group in the database.
+
+2. REQUIREMENTS:
+- In GoogleFormsService.java:
+  * Implement static extractFormId(String input) to parse the raw Form ID from either raw strings or full Google Form URLs (/d/<formId>/...).
+  * In updateForm(double groupId, String formId):
+    - Call extractFormId(formId) upfront.
+    - Query courses belonging specifically to groupId via courseRepository.findByGroupId(groupId) (falling back to all courses only if group has none).
+    - Inspect all courses in the database to build a set of all currently assigned student roll numbers.
+    - Filter available students so that no student assigned to any course slot is ever pushed to the Google Form options.
+- In group-manager.html:
+  * Update the input label in Step 1 to "Google Form ID or Link" with an updated placeholder explaining full URL support.
+- In GoogleFormsServiceTest.java:
+  * Add unit tests for extractFormId covering full URLs, viewform URLs, raw IDs, whitespace, and null/empty inputs.
+
+3. HARD CONSTRAINTS:
+- Retain Google Forms API v1 batch update structure and choice option indexing.
+- Zero external regex/URL libraries; use standard Java String operations.
+
+4. OUTPUT FORMAT & VERIFICATION:
+- Provide updated GoogleFormsService.java, group-manager.html, and GoogleFormsServiceTest.java.
+- Verify tests with .\mvnw.cmd test -Dtest=GoogleFormsServiceTest.
+

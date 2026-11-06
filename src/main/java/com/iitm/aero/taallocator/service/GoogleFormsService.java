@@ -28,7 +28,9 @@ import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,15 +58,52 @@ public class GoogleFormsService {
                 .build();
     }
 
+    public static String extractFormId(String input) {
+        if (input == null) return "";
+        input = input.trim();
+        if (input.contains("/d/")) {
+            String afterD = input.substring(input.indexOf("/d/") + 3);
+            if (afterD.contains("/")) {
+                return afterD.substring(0, afterD.indexOf("/"));
+            }
+            return afterD;
+        }
+        return input;
+    }
+
     public String updateForm(double groupId, String formId) {
+        formId = extractFormId(formId);
         System.out.println("Starting Google Forms API Update for Form ID: " + formId);
         try {
             Forms formsService = getFormsService();
             Form form = formsService.forms().get(formId).execute();
 
-            // Include ALL courses present in the system (courses.csv)
-            List<Course> courses = courseRepository.findAll();
-            List<Student> unassignedStudents = studentRepository.findByIsAvailableTrue();
+            // 1. Include only courses for THIS specific group (fallback to all if group has none)
+            List<Course> groupCourses = courseRepository.findByGroupId(groupId);
+            List<Course> courses = (groupCourses != null && !groupCourses.isEmpty()) ? groupCourses : courseRepository.findAll();
+            if (courses == null) {
+                courses = Collections.emptyList();
+            }
+
+            // 2. Identify all student roll numbers currently assigned to ANY course in the database
+            List<Course> allCourses = courseRepository.findAll();
+            Set<String> assignedRolls = new java.util.HashSet<>();
+            if (allCourses != null) {
+                for (Course c : allCourses) {
+                    if (c != null) {
+                        addRollIfAssigned(assignedRolls, c.getAssignedTa1());
+                        addRollIfAssigned(assignedRolls, c.getAssignedTa2());
+                    }
+                }
+            }
+
+            // 3. Filter to ONLY truly unassigned students (marked available AND not already assigned to any course)
+            List<Student> availableInDb = studentRepository.findByIsAvailableTrue();
+            List<Student> unassignedStudents = (availableInDb != null)
+                    ? availableInDb.stream()
+                        .filter(s -> s.getRollNo() != null && !assignedRolls.contains(s.getRollNo().trim().toUpperCase()))
+                        .collect(Collectors.toList())
+                    : Collections.emptyList();
             
             List<String> courseNames = courses.stream()
                     .map(c -> c.getCourseNo() != null ? c.getCourseNo().trim() : "")
@@ -147,6 +186,19 @@ public class GoogleFormsService {
             System.err.println(errMsg);
             e.printStackTrace();
             return errMsg;
+        }
+    }
+
+    private void addRollIfAssigned(java.util.Set<String> assignedRolls, String val) {
+        if (val == null || val.trim().isEmpty() || DataUploadService.isInvalidPlaceholder(val)) {
+            return;
+        }
+        String roll = val.trim();
+        if (roll.contains(":")) {
+            roll = roll.split(":", 2)[0].trim();
+        }
+        if (!DataUploadService.isInvalidPlaceholder(roll)) {
+            assignedRolls.add(roll.toUpperCase());
         }
     }
 }

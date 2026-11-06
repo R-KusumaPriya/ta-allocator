@@ -477,8 +477,8 @@
                 <form method="POST" th:action="@{/group/update-form}">
                     <input type="hidden" name="id" th:value="${groupId}" />
                     <div class="form-group">
-                        <label class="form-label">Google Form ID</label>
-                        <input type="text" name="formId" class="form-input" placeholder="e.g. 100pi2kPO4jm..." required />
+                        <label class="form-label">Google Form ID or Link</label>
+                        <input type="text" name="formId" class="form-input" placeholder="e.g. 1lBtzLnnCZV... or full Form URL" required />
                     </div>
                     <button type="submit" class="btn btn-indigo">Sync Live Form</button>
                 </form>

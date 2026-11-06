@@ -14,8 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,5 +57,30 @@ public class GoogleFormsServiceTest {
             courseRepository.findByGroupId(5.0);
             studentRepository.findByIsAvailableTrue();
         });
+    }
+
+    @Test
+    void testExtractFormId_FullUrl_ReturnsFormId() {
+        String url = "https://docs.google.com/forms/d/1lBtzLnnCZV_123456789/edit";
+        assertEquals("1lBtzLnnCZV_123456789", GoogleFormsService.extractFormId(url));
+    }
+
+    @Test
+    void testExtractFormId_ViewFormUrl_ReturnsFormId() {
+        String url = "https://docs.google.com/forms/d/1FAIpQLSc_ExampleFormId/viewform?usp=sf_link";
+        assertEquals("1FAIpQLSc_ExampleFormId", GoogleFormsService.extractFormId(url));
+    }
+
+    @Test
+    void testExtractFormId_RawId_ReturnsTrimmedFormId() {
+        String rawId = "   1lBtzLnnCZV_987654321   ";
+        assertEquals("1lBtzLnnCZV_987654321", GoogleFormsService.extractFormId(rawId));
+    }
+
+    @Test
+    void testExtractFormId_NullAndEmpty_ReturnsEmptyString() {
+        assertEquals("", GoogleFormsService.extractFormId(null));
+        assertEquals("", GoogleFormsService.extractFormId(""));
+        assertEquals("", GoogleFormsService.extractFormId("   "));
     }
 }
