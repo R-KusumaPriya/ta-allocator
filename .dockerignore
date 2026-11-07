@@ -1,0 +1,9 @@
+.git
+.gitignore
+target
+*.log
+credentials.json
+data
+.system_generated
+.idea
+*.iml
